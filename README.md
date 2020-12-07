@@ -6,7 +6,7 @@ It is implemented in a way that allows multiple sessions over a single trafic li
 
 All you need as entry point to the api is the OreApiV2 class.
 
-**This implementation currently targets https://staging-ore-vue.spongeproject.net/api/v2**
+**This implementation currently targets [https://staging-ore-vue.spongeproject.net/api/v2](https://staging-ore-vue.spongeproject.net/api)**
 
 About the CompletableFutures you're getting with this API:
 If you don't want to work with CompletionStages or don't want to handle the exeptions returned by get()
