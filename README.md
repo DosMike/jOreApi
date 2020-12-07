@@ -1,4 +1,4 @@
-# jOre
+# jOreApi
 
 This project is implementing the API for the SpongePowered Ore Repository.
 
