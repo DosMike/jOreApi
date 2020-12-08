@@ -26,6 +26,7 @@ public class Authentication {
 
     @BeforeAll
     public void prepareConnectionManager() {
+        System.setProperty("verboseNetTrafficLogging", "true");
         api = OreApiV2.builder()
                 .setApplication("jOreApi/1.2 (by DosMike; Ore API V2) / JUnit Test")
                 .build();
@@ -45,12 +46,13 @@ public class Authentication {
     @Order(2)
     public void destroySession() {
         ConnectionManager con = con();
-        String current = con.getSession().get();
+        String session = con.getSession().get();
         assertTrue(api.destroySession());
         assertTrue(con.getSession().isExpired());
+
         assertTrue(con.authenticate());
         assertTrue(con.getSession().isAlive());
-        assertNotEquals(current, con.getSession().get());
+        assertNotEquals(session, con.getSession().get());
     }
 
     @AfterAll

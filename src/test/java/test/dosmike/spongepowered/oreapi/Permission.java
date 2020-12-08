@@ -3,9 +3,7 @@ package test.dosmike.spongepowered.oreapi;
 import de.dosmike.spongepowered.oreapi.ConnectionManager;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.exception.MissingPermissionException;
-import de.dosmike.spongepowered.oreapi.netobject.OreNamespace;
-import de.dosmike.spongepowered.oreapi.netobject.OrePermission;
-import de.dosmike.spongepowered.oreapi.netobject.OrePermissionGrant;
+import de.dosmike.spongepowered.oreapi.netobject.*;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Field;
@@ -22,6 +20,7 @@ public class Permission {
 
     @BeforeAll
     public void prepareConnectionManager() {
+        System.setProperty("verboseNetTrafficLogging", "true");
         api = OreApiV2.builder()
                 .setApplication("jOreApi/1.2 (by DosMike; Ore API V2) / JUnit Test")
                 .build();
@@ -46,9 +45,15 @@ public class Permission {
 
     @Test
     @Order(3)
-    @Disabled("Waiting for violate-able endpoints to be implemented")
     public void violatePermission() {
-        assertThrows(MissingPermissionException.class, ()->{});
+        assertFalse(api.hasAllPermissions(Collections.singleton(OrePermission.Create_Project)).join());
+        assertThrows(MissingPermissionException.class, () -> OreProject.builder()
+                .setName("Test Plugin")
+                .setCategory(OreCategory.Misc)
+                .setPluginId("testplugin197h5z86")
+                .setOwner("DosMike")
+                .setDescription("This plugin should not exist")
+                .build(api).join());
     }
 
     @AfterAll

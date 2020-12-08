@@ -6,10 +6,7 @@ import de.dosmike.spongepowered.oreapi.limiter.RateLimiter;
 import de.dosmike.spongepowered.oreapi.netobject.OreSession;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.LinkedList;
@@ -34,6 +31,7 @@ public class ConnectionManager {
     private static final JsonParser parser = new JsonParser();
     final String application;
     private String apiKey = null;
+    private static boolean verboseNetworkLogging = false;
 
     /** rate limiter is static, because we don't want connection spam through
      * different plugins */
@@ -43,6 +41,7 @@ public class ConnectionManager {
     ObjectCache cache;
 
     private ConnectionManager(String application) {
+        verboseNetworkLogging = System.getProperty("verboseNetTrafficLogging") != null;
         this.application = application;
         session = new OreSession();
         if (limiter == null) {
@@ -67,13 +66,15 @@ public class ConnectionManager {
     public void withApiKey(String apiKey) {
         this.apiKey = apiKey;
     }
+
     public void clearApiKey() {
         apiKey = null;
     }
 
-    public HttpsURLConnection createConnection(String endpoint) throws IOException {
-        System.out.println(endpoint);
-        HttpsURLConnection connection = (HttpsURLConnection) new URL(ConnectionManager.baseUrl+"api/v2"+endpoint).openConnection();
+    public HttpsURLConnection createConnection(String method, String endpoint) throws IOException {
+        if (verboseNetworkLogging) System.out.println(method + " " + endpoint);
+        HttpsURLConnection connection = (HttpsURLConnection) new URL(ConnectionManager.baseUrl + "api/v2" + endpoint).openConnection();
+        connection.setRequestMethod(method);
         connection.setInstanceFollowRedirects(true);
         connection.setConnectTimeout(5000);
         connection.setReadTimeout(5000);
@@ -81,14 +82,27 @@ public class ConnectionManager {
         connection.setRequestProperty("Content-Type", "application/json");
         return connection;
     }
+
     static JsonObject parseJson(HttpsURLConnection connection) throws IOException {
         JsonObject jobj = parser.parse(new InputStreamReader(connection.getInputStream())).getAsJsonObject();
-        System.out.println(jobj.toString());
+        if (verboseNetworkLogging) System.out.println("< " + jobj.toString());
         return jobj;
     }
+
+    static HttpsURLConnection postData(HttpsURLConnection connection, String rawBody) throws IOException {
+        if (verboseNetworkLogging) System.out.println("> " + rawBody);
+        connection.setDoOutput(true);
+        try (BufferedWriter w = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()))) {
+            w.write(rawBody);
+            w.flush();
+        }
+        return connection;
+    }
+
     public OreSession getSession() {
         return session;
     }
+
     public ObjectCache getCache() {
         return cache;
     }
@@ -96,11 +110,10 @@ public class ConnectionManager {
     public boolean authenticate() {
         if (session.isAlive()) return true;
         try {
-            HttpsURLConnection connection = createConnection("/authenticate");
+            HttpsURLConnection connection = createConnection("POST", "/authenticate");
             if (apiKey != null)
                 connection.setRequestProperty("Authorization","OreApi apikey="+ URLEncoder.encode(apiKey,"UTF-8"));
             connection.setDoInput(true);
-            connection.setRequestMethod("POST");
             if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
                 tryPrintErrorBody(connection);
                 return false;
@@ -117,11 +130,10 @@ public class ConnectionManager {
         String sid = session.getAnyways();
         if (sid == null || sid.isEmpty()) return false; //session already nuked from orbit
         try {
-            HttpsURLConnection connection = createConnection("/authenticate");
+            HttpsURLConnection connection = createConnection("POST", "/authenticate");
             if (apiKey != null)
                 connection.setRequestProperty("Authorization","OreApi apikey="+ URLEncoder.encode(apiKey,"UTF-8"));
             connection.setDoInput(true);
-            connection.setRequestMethod("POST");
             if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
                 tryPrintErrorBody(connection);
                 return false;

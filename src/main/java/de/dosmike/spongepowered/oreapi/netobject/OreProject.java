@@ -1,11 +1,14 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
+import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
 
 import java.io.Serializable;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 public class OreProject extends OreProjectReference implements Serializable {
 
@@ -73,5 +76,56 @@ public class OreProject extends OreProjectReference implements Serializable {
     public String getUrlIcon() {
         return urlIcon;
     }
+
+    //Region builder
+    public static class Builder {
+        JsonObject request = new JsonObject();
+
+        private Builder() {
+        }
+
+        public Builder setName(String name) {
+            if (name == null) throw new NullPointerException("name can't be null");
+            request.addProperty("name", name);
+            return Builder.this;
+        }
+
+        public Builder setPluginId(String pluginId) {
+            if (pluginId == null) throw new NullPointerException("pluginId can't be null");
+            request.addProperty("plugin_id", pluginId);
+            return Builder.this;
+        }
+
+        public Builder setCategory(OreCategory category) {
+            if (category == null) throw new NullPointerException("category can't be null");
+            request.addProperty("category", category.name().toLowerCase(Locale.ROOT));
+            return Builder.this;
+        }
+
+        /**
+         * this is most likely the summary
+         */
+        public Builder setDescription(String description) {
+            if (description == null) throw new NullPointerException("description can't be null");
+            request.addProperty("description", description);
+            return Builder.this;
+        }
+
+        public Builder setOwner(String ownerName) {
+            if (ownerName == null) throw new NullPointerException("ownerName can't be null");
+            request.addProperty("owner_name", ownerName);
+            return Builder.this;
+        }
+
+        public CompletableFuture<OreProject> build(OreApiV2 api) {
+            //noinspection deprecation
+            return api.createProject(request);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+    //endregion
 
 }

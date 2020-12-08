@@ -1,5 +1,6 @@
 package de.dosmike.spongepowered.oreapi;
 
+import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.netobject.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +31,18 @@ public class OreApiV2 implements AutoCloseable {
     private <T> CompletableFuture<T> enqueue(Supplier<T> task) {
         return ConnectionManager.limiter.enqueue(task);
     }
-    private static String urlencoded(String s) { try { return URLEncoder.encode(s, "UTF-8"); } catch (Throwable e) { throw new RuntimeException(e); } }
+
+    private static String urlencoded(String s) {
+        try {
+            return URLEncoder.encode(s, "UTF-8");
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    ConnectionManager getConnectionManager() {
+        return instance;
+    }
 
     /** @return true if the termination of this session was confirmed by api. will be false if already destroyed */
     public boolean destroySession() {
@@ -100,7 +112,19 @@ public class OreApiV2 implements AutoCloseable {
     public CompletableFuture<OreProject> getProject(OreNamespace namespace) {
         return cache().project(namespace)
                 .map(CompletableFuture::completedFuture)
-                .orElseGet(()->enqueue(NetTasks.getProject(instance, namespace)));
+                .orElseGet(() -> enqueue(NetTasks.getProject(instance, namespace)));
+    }
+
+    /**
+     * Use an OreProject.Builder builder instead of calling this manually.
+     * It also provides nice setters.
+     *
+     * @param request request data
+     * @return the task requesting the project to be created
+     */
+    @Deprecated
+    public CompletableFuture<OreProject> createProject(JsonObject request) {
+        return enqueue(NetTasks.createProject(instance, request));
     }
 
     /**
@@ -108,6 +132,7 @@ public class OreApiV2 implements AutoCloseable {
      * but the seach also returns matches for pluginId.
      * This means we have to sift through all search results and remove all
      * results that might accidentally match on name or keywords.
+     *
      * @return the first matching OreProject if through all result pages, a project with matching project id was found.
      */
     public CompletableFuture<OreProject> findProjectByPluginId(String pluginId) {

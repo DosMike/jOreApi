@@ -2,12 +2,14 @@ package test.dosmike.spongepowered.oreapi;
 
 import de.dosmike.spongepowered.oreapi.ConnectionManager;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
-import de.dosmike.spongepowered.oreapi.netobject.*;
+import de.dosmike.spongepowered.oreapi.netobject.OreNamespace;
+import de.dosmike.spongepowered.oreapi.netobject.OreVersionList;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Field;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -20,6 +22,7 @@ public class PublicVersions {
 
     @BeforeAll
     public void prepareConnectionManager() {
+        System.setProperty("verboseNetTrafficLogging", "true");
         api = OreApiV2.builder()
                 .setApplication("jOreApi/1.2 (by DosMike; Ore API V2) / JUnit Test")
                 .build();
