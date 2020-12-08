@@ -1,39 +1,41 @@
 package de.dosmike.spongepowered.oreapi.limiter;
 
 import de.dosmike.spongepowered.oreapi.utility.TracingThreadFactory;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-/** if you're concerned about dosing the ore servers, take this.
+/**
+ * If you're concerned about dosing the ore service, take this.
  * This is a management thread for the tasks, that'll wait for a limiter
- * to approve the next task to be executed in a async executor. */
+ * to approve the next task to be executed in a async executor.
+ * Since this is about preventing
+ */
 public class RateLimiter extends Thread {
 
-    boolean running = true;
-    List<CompletableTask<?>> tasks = new LinkedList<>();
+    private boolean running = true;
+    private final List<CompletableTask<?>> tasks = new LinkedList<>();
     private final Object taskMutex = new Object();
-    private List<Runnable> onIdleCallbacks=new LinkedList<>();
-    private List<Runnable> onIdleOnceCallbacks=new LinkedList<>();
+    private final List<Runnable> onIdleCallbacks = new LinkedList<>();
+    private final List<Runnable> onIdleOnceCallbacks = new LinkedList<>();
     private final Object idleMutex = new Object();
-    private Limiter limit;
-    private ExecutorService exec = Executors.newFixedThreadPool(1);
+    private final Limiter limit;
+    private final ExecutorService exec = Executors.newFixedThreadPool(1, new TracingThreadFactory());
 
     public RateLimiter(Limiter limiter) {
         this.limit = limiter;
         try {
             setName("Ore Query Limiter");
             setUncaughtExceptionHandler(TracingThreadFactory.exceptionTracePrinter);
-        } catch (SecurityException ignore) {}
+        } catch (SecurityException ignore) {
+        }
     }
+
     public RateLimiter() {
-        this(new BucketLimiter(2,80)); //bucket is faster than averaging
+        this(new BucketLimiter(2, 80)); //bucket is faster than averaging
     }
 
     @Override
@@ -41,27 +43,33 @@ public class RateLimiter extends Thread {
         boolean nowIdle;
         while(running) {
             CompletableTask<?> task = null;
+            //retrieve next task
             synchronized (taskMutex) {
                 if (!tasks.isEmpty())
                     task = tasks.remove(0);
             }
-            if (task != null) { //execute next task
+            //execute next task outside of mutex
+            if (task != null) {
                 Future<?> currentTask = null;
                 try {
                     currentTask = exec.submit(task);
                     currentTask.get();
+                    // success
                     task.notifyOwner();
                 } catch (InterruptedException i) {
+                    // termination
                     currentTask.cancel(true);
                     task.cancel();
                     halt(); break;
                 } catch (ExecutionException wrapped) {
+                    // failure
                     task.notifyOwnerExceptional(wrapped.getCause());
                 }
                 //on idle callback
                 synchronized (taskMutex) {
                     nowIdle = tasks.isEmpty();
                 }
+                //again do actual work outside of mutex
                 if (nowIdle) {
                     onIdleNotify();
                 }
@@ -74,6 +82,7 @@ public class RateLimiter extends Thread {
                     Thread.sleep(100);
                 }
             } catch (InterruptedException interrupt) {
+                //termination
                 halt();
                 break;
             }
@@ -81,6 +90,10 @@ public class RateLimiter extends Thread {
         Logger.getLogger(getName()).fine("Rate Limiter terminated");
     }
 
+    /**
+     * Enqueues a task as CompletableTask that awaits execution.
+     * Returns the CompletableFuture that will receive results.
+     */
     public <T> CompletableFuture<T> enqueue(Supplier<T> task) {
         if (!isAlive()) throw new IllegalStateException("The rate limiter has already terminated");
         CompletableTask<T> future = new CompletableTask<>(task);
@@ -90,7 +103,10 @@ public class RateLimiter extends Thread {
         return future.getFuture();
     }
 
-    /** Shut down this RateLimiter after the current task finished */
+    /**
+     * Shut down this RateLimiter after the current task finished.
+     * All enqueues tasks will be canceled as well.
+     */
     public void halt() {
         running = false;
         synchronized (taskMutex) {
@@ -100,18 +116,31 @@ public class RateLimiter extends Thread {
         exec.shutdownNow(); //notify running task
     }
 
-    /** specify a runnable that gets executed after the last task ran. Does not execute if the limiter starts idle */
+    /**
+     * Specify a runnable that gets executed after the last task ran.
+     * Does not execute if the limiter starts idle.
+     *
+     * @param whenIdle the task to execute when the this {@link RateLimiter} runs out of things to do
+     * @param once     set true if you only want the task to execute once
+     */
     public void addOnIdleListener(Runnable whenIdle, boolean once) {
         synchronized (idleMutex) {
             (once ? onIdleOnceCallbacks : onIdleCallbacks).add(whenIdle);
         }
     }
+
+    /**
+     * Remove the idle listener again.
+     *
+     * @param listener listener to remove.
+     */
     public void removeOnIdleListener(Runnable listener) {
         synchronized (idleMutex) {
             onIdleCallbacks.remove(listener);
             onIdleOnceCallbacks.remove(listener);
         }
     }
+
     private void onIdleNotify() {
         // unlock before execution to allow modification of the callback lists from within the callbacks
         List<Runnable> collective = new LinkedList<>();
@@ -120,9 +149,16 @@ public class RateLimiter extends Thread {
             collective.addAll(onIdleOnceCallbacks);
             onIdleOnceCallbacks.clear();
         }
-        collective.forEach(r->{try{r.run();}catch (Throwable t){/**/}});
+        collective.forEach(r -> {
+            try {
+                r.run();
+            } catch (Throwable t) {/**/}
+        });
     }
 
+    /**
+     * Proxy to this limiters {@link Limiter#takeRequest()}
+     */
     public synchronized void takeRequest() {
         limit.takeRequest();
     }

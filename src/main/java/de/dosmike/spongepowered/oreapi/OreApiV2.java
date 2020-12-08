@@ -5,19 +5,18 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
  * This class is the "party in the front" - enjoy a class with clean API<br>
- * <li>{@link OreApiV2} Presents a nice interface with only the necessary methods. It utilizes the cache and, if
+ * <ul><li>{@link OreApiV2} Presents a nice interface with only the necessary methods. It utilizes the cache and, if
  * necessary calls into {@link NetTasks} for live data.</li>
  * <li>{@link NetTasks} Is the actual API implementation. Providing suppliers that can be scheduled in the Limiter held
  * by the {@link ConnectionManager}</li>
  * <li>{@link ConnectionManager} holds all the local API data including cache and session. It contains all sorts of
- * utility from building connection objects to destroying sessions</li>
+ * utility from building connection objects to destroying sessions</li></ul>
  */
 public class OreApiV2 implements AutoCloseable {
 

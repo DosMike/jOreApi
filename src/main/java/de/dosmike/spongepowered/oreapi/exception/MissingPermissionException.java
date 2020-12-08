@@ -5,7 +5,10 @@ import de.dosmike.spongepowered.oreapi.netobject.OrePermission;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-/** Emitted when a request returned RC 403 - Forbidden */
+/**
+ * Emitted when a request returned RC 403 - Forbidden.
+ * This means that your current session lacks some permission.
+ */
 public class MissingPermissionException extends RuntimeException {
     public MissingPermissionException() {
     }

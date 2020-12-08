@@ -12,26 +12,38 @@ public class OreProjectFilter extends OrePaginationFilter {
 
     String query = null;
     Set<OreCategory> categories = new HashSet<>();
-    /** Value nullable! */
-    Map<String,String> platforms = new HashMap<>();
+    /**
+     * Value nullable!
+     */
+    Map<String, String> platforms = new HashMap<>();
     Set<OreStability> stabilities = new HashSet<>();
     String owner = null;
     Sort sort = Sort.Updated;
     boolean sortByRelevance = true;
     boolean exact = false;
 
-    /** convenience constructor for default pagination with only a search query set */
+    /**
+     * convenience constructor for default pagination with only a search query set.
+     *
+     * @param query the string to search for
+     */
     public OreProjectFilter(String query) {
         this.query = query;
     }
+
     public OreProjectFilter() {
 
     }
 
-    /** Set to null to clear */
+    /**
+     * Set to null to clear
+     *
+     * @param searchQuery the string to search for
+     */
     public void setQuery(String searchQuery) {
         this.query = searchQuery;
     }
+
     public Optional<String> getQuery() {
         return Optional.ofNullable(query);
     }
@@ -144,7 +156,7 @@ public class OreProjectFilter extends OrePaginationFilter {
     }
 
     @Override
-    protected OreProjectFilter clone() {
+    public OreProjectFilter clone() {
         OreProjectFilter clone = new OreProjectFilter();
         clone.query = query;
         clone.categories.addAll(categories);

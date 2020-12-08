@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 
-
 import java.io.Serializable;
 
 /**
@@ -30,7 +29,6 @@ public class OrePlatform implements Serializable {
     public String getName() {
         return platform;
     }
-
     public String getPlatformVersion() {
         return platformVersion;
     }

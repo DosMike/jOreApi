@@ -7,6 +7,10 @@ import com.google.gson.JsonObject;
 import java.lang.reflect.*;
 import java.util.function.Function;
 
+/**
+ * Could probably change to gson, but this was fun.
+ * Fills object instances from json.
+ */
 public class JsonUtil {
 
     public static void fillSelf(Object instance, JsonObject source) {
@@ -16,6 +20,7 @@ public class JsonUtil {
             clz = clz.getSuperclass();
         }
     }
+
     private static void fillSelfOfType(Object instance, Class<?> type, JsonObject source) {
         Field[] fields = type.getDeclaredFields();
         for (Field f : fields) {
@@ -137,18 +142,22 @@ public class JsonUtil {
         if (element == null || element.isJsonNull()) return false;
         return element.getAsBoolean();
     }
+
     private static int parserOptInteger(JsonElement element) {
         if (element == null || element.isJsonNull()) return 0;
         return element.getAsInt();
     }
+
     private static long parserOptLong(JsonElement element) {
         if (element == null || element.isJsonNull()) return 0L;
         return element.getAsLong();
     }
+
     private static String parserOptString(JsonElement element) {
         if (element == null || element.isJsonNull()) return null;
         return element.getAsString();
     }
+
     private static Enum<?> parserOptEnum(JsonElement element, Class<Enum<?>> enumClass) {
         if (element == null || element.isJsonNull()) return null;
         try {
@@ -159,6 +168,7 @@ public class JsonUtil {
             return null;
         }
     }
+
     private static <T extends Object> T parserOptObject(JsonElement element, Class<T> tClass) {
         if (element == null || element.isJsonNull() || !(element instanceof JsonObject)) {
             return null;
@@ -176,6 +186,7 @@ public class JsonUtil {
             }
         }
     }
+
     private static <T extends Object> T[] parseArray(JsonElement element, Function<JsonElement,T> elementParser, Class<T> tClass) {
         if (!element.isJsonArray()) return (T[])Array.newInstance(tClass, 0);
         JsonArray array = element.getAsJsonArray();
@@ -184,19 +195,6 @@ public class JsonUtil {
             instance[i] = elementParser.apply(array.get(i));
         }
         return instance;
-    }
-
-    public static String optString(JsonObject object, String node) {
-        if (!object.has(node) || object.get(node).isJsonNull()) return null;
-        return object.get(node).getAsString();
-    }
-    public static int optInt(JsonObject object, String node) {
-        if (!object.has(node) || object.get(node).isJsonNull()) return 0;
-        return object.get(node).getAsInt();
-    }
-    public static long optLong(JsonObject object, String node) {
-        if (!object.has(node) || object.get(node).isJsonNull()) return 0L;
-        return object.get(node).getAsLong();
     }
 
 }

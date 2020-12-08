@@ -45,8 +45,9 @@ public class OrePermissionGrant extends HashSet<OrePermission> {
      * Will prevent code form continuing execution if one or more permissions
      * are missing from this set.
      * The thrown exceptions message will contain a user readable list of all missing permissions.
+     *
      * @param required the permissions required in order to continue execution.
-     * @throws IllegalStateException if one or more permission from {@param required} are not in this grant.
+     * @throws IllegalStateException if one or more permission from required are not in this grant.
      */
     public void assertAllPermissions(OrePermission... required) {
         Set<OrePermission> missing = new HashSet<>(Arrays.asList(required));
@@ -54,12 +55,13 @@ public class OrePermissionGrant extends HashSet<OrePermission> {
         if (!missing.isEmpty())
             throw new IllegalStateException("Missing Permission: "+missing.stream().map(OrePermission::name).collect(Collectors.joining(", ")));
     }
+
     /**
      * Will prevent code form continuing execution if none of the requested
      * permissions are contained in this set.
      * The thrown exceptions message will contain a user readable list of possible missing permissions.
      * @param required the permissions required in order to continue execution.
-     * @throws IllegalStateException if all permission from {@param required} are missing in this grant.
+     * @throws IllegalStateException if all permission from required are missing in this grant.
      */
     public void assertAnyPermissions(OrePermission... required) {
         for (OrePermission p : required)

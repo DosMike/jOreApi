@@ -7,16 +7,21 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * Collection wrapper that will automatically remove entries that are older than a certain amount of time
+ */
 public class CachingCollection<E> implements Collection<E>, Serializable {
 
     private Collection<Expiring<E>> container;
     private long lifespan;
+
     /** timeSpan and timeUnit specify how long entries will be valid.
      * Elements will be lazy-checked (removed if expired &amp; values requested) */
     public CachingCollection(Collection<Expiring<E>> container, long timeSpan, TimeUnit timeUnit) {
         this.container = container;
         lifespan = timeUnit.toMillis(timeSpan);
     }
+
     /** Wraps a {@link HashSet} with this caching collection, so not only
      * will elements expire, but they'll also be unique */
     public CachingCollection(long timeSpan, TimeUnit timeUnit) {

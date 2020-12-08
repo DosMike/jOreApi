@@ -5,13 +5,16 @@ import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
 
-
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.Optional;
 
 public class OreVersion implements Serializable {
 
+    /**
+     * This allows requests for version without having to specify the project again.
+     * Also prevents accidentally specifying in the wrong project.
+     */
     OreProjectReference project;
     @FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
     long createdAt;

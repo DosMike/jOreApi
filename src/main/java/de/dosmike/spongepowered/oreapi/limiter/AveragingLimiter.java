@@ -5,6 +5,13 @@ import de.dosmike.spongepowered.oreapi.utility.CachingCollection;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This limiter implements a way of rate limiting with
+ * x requests per second and y requests per minute.
+ * For each request the timestamp is saved to a maximum of
+ * y requests. They decay after a minute, immediately freeing
+ * up a request again.
+ */
 public class AveragingLimiter implements Limiter {
 
     private int requestsPerSecond;
@@ -16,6 +23,7 @@ public class AveragingLimiter implements Limiter {
         requestsPerSecond = perSecond;
         requestsPerMinute = perMinute;
     }
+
     public AveragingLimiter(){
         requestsPerSecond = 2;
         requestsPerMinute = 80;
@@ -55,7 +63,7 @@ public class AveragingLimiter implements Limiter {
 
         //limit for second hit, would also free minute limit if hit
         if (lastSecond >= requestsPerSecond) return oldestTimeSec + 1_001L;
-        //minute limit was hit, wait for that to expire
+            //minute limit was hit, wait for that to expire
         else return oldestTimeMin + 60_001L;
     }
 

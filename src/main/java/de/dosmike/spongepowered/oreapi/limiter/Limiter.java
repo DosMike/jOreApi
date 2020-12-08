@@ -1,7 +1,11 @@
 package de.dosmike.spongepowered.oreapi.limiter;
 
+/**
+ * Interface for request limiters
+ */
 public interface Limiter {
 
+    /** @return true if a request can currently be made without delay */
     boolean canRequest();
 
     /** @return the unix timestamp, where the next request can be made */
@@ -15,6 +19,7 @@ public interface Limiter {
         }
     }
 
+    /** notifies the limiter that a request is going out basically now */
     void takeRequest();
 
 }

@@ -16,7 +16,9 @@ public class OrePagination<F extends OrePaginationFilter> implements Serializabl
     @FromJson("count")
     int count;
 
-    /** This is the filter that was used to obtain the result holding this pagination */
+    /**
+     * This is the filter that was used to obtain the result holding this pagination
+     */
     F filter;
 
     public OrePagination(JsonObject object, F filterBase) {
@@ -24,30 +26,50 @@ public class OrePagination<F extends OrePaginationFilter> implements Serializabl
         JsonUtil.fillSelf(this, object);
     }
 
-    /** generate generic query parameters for the specified page without initial
-     * concatinator
-     * @return modified filter */
+    /**
+     * create a new pagination filter for the requested page.
+     * The upper limit can't be exceeded but won't throw an exception.
+     * The lower limit is 1
+     *
+     * @param page the target page
+     * @return modified filter
+     * @throws IllegalArgumentException if the page is &lt; 1
+     */
     public F getQueryPage(int page) {
         if (page < 1) throw new IllegalArgumentException("Page has to be positive integer");
         F newFilter = (F) filter.clone();
         newFilter.setPage(page);
         return newFilter;
     }
-    /** calculate current page based on offset
-     * @return current page number */
+
+    /**
+     * calculate current page based on offset
+     *
+     * @return current page number
+     */
     public int getPage() {
-        return (offset/limit)+1;
+        return (offset / limit) + 1;
     }
+
+    /**
+     * calculate the last page based on count
+     *
+     * @return number of last page
+     */
     public int getLastPage() {
-        return Math.max((int)Math.ceil((double)count/limit),1);
+        return Math.max((int) Math.ceil((double) count / limit), 1);
     }
-    /** create the query for the next page (with max getLastPage()), see {@link #getQueryPage} for more info
-     * @return modified filter */
+
+    /**
+     * create the query for the next page (with max getLastPage()), see {@link #getQueryPage} for more info
+     *
+     * @return modified filter
+     */
     public F getQueryNext() {
         int page = getPage();
         int lastPage = getLastPage();
-        F newFilter = (F)filter.clone();
-        newFilter.setPage(page>=lastPage ? lastPage : getPage()+1);
+        F newFilter = (F) filter.clone();
+        newFilter.setPage(page >= lastPage ? lastPage : getPage() + 1);
         return newFilter;
     }
     /** create the query for the previous page (with min page 1),
@@ -74,6 +96,7 @@ public class OrePagination<F extends OrePaginationFilter> implements Serializabl
         return offset;
     }
 
+    /** @return true if getPage() &lt; getLastPage() */
     public boolean hasMorePages() {
         return getPage() < getLastPage();
     }

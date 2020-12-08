@@ -1,15 +1,12 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
-import de.dosmike.spongepowered.oreapi.ConnectionManager;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
 
-
 import java.io.Serializable;
 
-/** does not parse URLs to prevent Malformed URL Exceptions */
 public class OreProject extends OreProjectReference implements Serializable {
 
     @FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
@@ -27,7 +24,7 @@ public class OreProject extends OreProjectReference implements Serializable {
     @FromJson(value = "last_updated", mapper = TypeMappers.StringTimestampMapper.class)
     long lastUpdate;
     @FromJson("visibility")
-    OreVisibility visibility; //always "public" for this implementation
+    OreVisibility visibility;
     @FromJson("settings")
     OreProjectSettings settings;
     @FromJson("icon_url")
@@ -45,10 +42,6 @@ public class OreProject extends OreProjectReference implements Serializable {
         return name;
     }
 
-
-    /**
-     * The Versions returned here are partial!
-     */
     public OrePromotedVersion[] getPromotedVersions() {
         return promotedVersions;
     }

@@ -6,7 +6,10 @@ import de.dosmike.spongepowered.oreapi.limiter.RateLimiter;
 import de.dosmike.spongepowered.oreapi.netobject.OreSession;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.LinkedList;
@@ -17,12 +20,12 @@ import java.util.List;
  * <br>
  * Please do me a favour and call {@link #terminate} when you're exiting, this class hosts a static thread that needs to
  * go at some point.<br>
- * <li>{@link OreApiV2} Presents a nice interface with only the necessary methods. It utilizes the cache and, if
+ * <ul><li>{@link OreApiV2} Presents a nice interface with only the necessary methods. It utilizes the cache and, if
  * necessary calls into {@link NetTasks} for live data.</li>
  * <li>{@link NetTasks} Is the actual API implementation. Providing suppliers that can be scheduled in the Limiter held
  * by the {@link ConnectionManager}</li>
  * <li>{@link ConnectionManager} holds all the local API data including cache and session. It contains all sorts of
- * utility from building connection objects to destroying sessions</li>
+ * utility from building connection objects to destroying sessions</li></ul>
  */
 public class ConnectionManager {
 
@@ -165,7 +168,7 @@ public class ConnectionManager {
         }
 
         /**
-         * Use the provided {@param key} for authentication and session creation.
+         * Use the provided key for authentication and session creation.
          * You can change this at a later points with {@link #withApiKey}
          */
         public Builder setApiKey(String key) {

@@ -1,5 +1,11 @@
 package de.dosmike.spongepowered.oreapi.limiter;
 
+/**
+ * This limiter implements the standard way of rate limiting with buckets
+ * that last a minute and a second respectively.
+ * These buckets count down from the available requests withing their timespan.
+ * After they expire, the buckets get re-filled.
+ */
 public class BucketLimiter implements Limiter {
 
     private int requestsPerSecond;
@@ -19,6 +25,7 @@ public class BucketLimiter implements Limiter {
         resetSecondAt = System.currentTimeMillis()+ 1_001L;
         resetMinuteAt = System.currentTimeMillis()+60_001L;
     }
+
     public BucketLimiter(){
         this(2,80);
     }

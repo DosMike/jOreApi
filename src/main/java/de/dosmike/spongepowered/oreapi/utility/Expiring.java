@@ -6,6 +6,9 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/**
+ * Object with lifetime
+ */
 public class Expiring<T> implements Serializable {
     protected T value;
     protected long expirationDate;

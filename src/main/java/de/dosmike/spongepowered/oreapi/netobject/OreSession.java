@@ -1,12 +1,17 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
+import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.utility.Expiring;
 import de.dosmike.spongepowered.oreapi.utility.RepositoryTimestamp;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.Serializable;
 
+/**
+ * Represents the current session token. Should be destroyed with
+ * {@link OreApiV2#destroySession()}
+ */
 public class OreSession extends Expiring<String> implements Serializable {
 
     public OreSession(JsonObject json) {
@@ -18,17 +23,23 @@ public class OreSession extends Expiring<String> implements Serializable {
             expirationDate = 0L;
         }
     }
-    public OreSession(){}
+
+    public OreSession() {
+    }
 
     /**
+     * @param connection to authorize
      * @return connection for piping
      */
     public HttpsURLConnection authenticate(HttpsURLConnection connection) {
         if (isAlive())
-            connection.setRequestProperty("Authorization", "OreApi session="+value);
+            connection.setRequestProperty("Authorization", "OreApi session=" + value);
         return connection;
     }
 
+    /**
+     * Should not be called manually.
+     */
     public void destroy() {
         value = null;
         expirationDate = 0L;

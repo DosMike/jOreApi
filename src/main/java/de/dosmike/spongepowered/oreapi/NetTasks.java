@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.dosmike.spongepowered.oreapi.exception.MissingPermissionException;
 import de.dosmike.spongepowered.oreapi.exception.NoResultException;
-import de.dosmike.spongepowered.oreapi.limiter.RateLimiter;
 import de.dosmike.spongepowered.oreapi.netobject.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
@@ -25,12 +23,12 @@ import static de.dosmike.spongepowered.oreapi.ConnectionManager.tryPrintErrorBod
 /**
  * If {@link OreApiV2} is "party in the front" and {@link ConnectionManager} is "business in the back", then this is?
  * This is the poor fella that has to carry the whole team.<br>
- * <li>{@link OreApiV2} Presents a nice interface with only the necessary methods. It utilizes the cache and, if
+ * <ul><li>{@link OreApiV2} Presents a nice interface with only the necessary methods. It utilizes the cache and, if
  * necessary calls into {@link NetTasks} for live data.</li>
  * <li>{@link NetTasks} Is the actual API implementation. Providing suppliers that can be scheduled in the Limiter held
  * by the {@link ConnectionManager}</li>
  * <li>{@link ConnectionManager} holds all the local API data including cache and session. It contains all sorts of
- * utility from building connection objects to destroying sessions</li>
+ * utility from building connection objects to destroying sessions</li></ul>
  */
 class NetTasks {
 
