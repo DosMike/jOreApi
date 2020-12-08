@@ -39,26 +39,43 @@ class NetTasks {
         if (!cm.authenticate())
             throw new IllegalStateException("Could not create API session");
     }
-    private static String urlencoded(String s) { try { return URLEncoder.encode(s, "UTF-8"); } catch (Throwable e) { throw new RuntimeException(e); } }
+
+    private static String urlencoded(String s) {
+        try {
+            return URLEncoder.encode(s, "UTF-8");
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private static HttpsURLConnection connect(ConnectionManager connection, String method, String queryURI) throws IOException {
         auth(connection);
         ConnectionManager.limiter.takeRequest();
         return connection.session.authenticate(connection.createConnection(method, queryURI));
     }
+
+    private static void checkResponseCode(HttpsURLConnection connection, OrePermission endPointPermission) throws IOException {
+        int rc = connection.getResponseCode();
+        if (rc < 200 || rc >= 400) {
+            if (rc == 403 && endPointPermission != null)
+                throw new MissingPermissionException(endPointPermission);
+            else if (rc != 404) // not 403 && not 404 -> print
+                tryPrintErrorBody(connection);
+            throw new NoResultException(connection.getResponseMessage());
+        }
+        //otherwise we good
+    }
     //endregion
 
     //region project
     static Supplier<OreProjectList> projectSearch(ConnectionManager cm, OreProjectFilter filter) {
-        return ()->{try {
-            HttpsURLConnection connection = connect(cm, "GET", "/projects?" + filter.toString());
-            connection.setDoInput(true);
-            if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                tryPrintErrorBody(connection);
-                throw connection.getResponseCode()==403?new MissingPermissionException(OrePermission.View_Public_Info):new NoResultException(connection.getResponseMessage());
-            }
-            OreProjectList resultList = new OreProjectList(ConnectionManager.parseJson(connection), OreProject.class, filter);
-            for (OreProject p : resultList.getResult())
+        return () -> {
+            try {
+                HttpsURLConnection connection = connect(cm, "GET", "/projects?" + filter.toString());
+                connection.setDoInput(true);
+                checkResponseCode(connection, OrePermission.View_Public_Info);
+                OreProjectList resultList = new OreProjectList(ConnectionManager.parseJson(connection), OreProject.class, filter);
+                for (OreProject p : resultList.getResult())
                 cm.cache.cacheProject(p);
             return resultList;
         } catch (IOException e) {
@@ -70,10 +87,7 @@ class NetTasks {
         return ()->{try {
             HttpsURLConnection connection = connect(cm, "GET", "/projects/" + namespace.toURLEncode());
             connection.setDoInput(true);
-            if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                if (connection.getResponseCode() != 404) tryPrintErrorBody(connection);
-                throw connection.getResponseCode() == 403 ? new MissingPermissionException(OrePermission.View_Public_Info) : new NoResultException(connection.getResponseMessage());
-            }
+            checkResponseCode(connection, OrePermission.View_Public_Info);
             return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
         } catch (IOException e) {
             throw new NoResultException(e);
@@ -126,10 +140,7 @@ class NetTasks {
                 HttpsURLConnection connection = connect(cm, "POST", "/projects");
                 connection.setDoInput(true);
                 ConnectionManager.postData(connection, requestBody);
-                if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                    if (connection.getResponseCode() != 404) tryPrintErrorBody(connection);
-                    throw connection.getResponseCode() == 403 ? new MissingPermissionException(OrePermission.Create_Project) : new NoResultException(connection.getResponseMessage());
-                }
+                checkResponseCode(connection, OrePermission.Create_Project);
                 return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
             } catch (IOException e) {
                 throw new NoResultException(e);
@@ -147,11 +158,22 @@ class NetTasks {
                 HttpsURLConnection connection = connect(cm, "PATCH", "/projects/" + ns.toURLEncode());
                 connection.setDoInput(true);
                 ConnectionManager.postData(connection, requestBody);
-                if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                    if (connection.getResponseCode() != 404) tryPrintErrorBody(connection);
-                    throw connection.getResponseCode() == 403 ? new MissingPermissionException(OrePermission.Create_Project) : new NoResultException(connection.getResponseMessage());
-                }
+                checkResponseCode(connection, OrePermission.Edit_Subject_Settings);
                 return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
+            } catch (IOException e) {
+                throw new NoResultException(e);
+            }
+        };
+    }
+
+    public static Supplier<Void> deleteProject(ConnectionManager cm, OreProjectReference project) {
+        return () -> {
+            try {
+                cm.cache.untrack(project);
+                HttpsURLConnection connection = connect(cm, "DELETE", "/projects/" + project.getNamespace().toURLEncode());
+                connection.setDoInput(true);
+                checkResponseCode(connection, OrePermission.Hard_Delete_Project);
+                return null;
             } catch (IOException e) {
                 throw new NoResultException(e);
             }
@@ -166,44 +188,38 @@ class NetTasks {
                 String totalQuery = "/projects/" + project.getNamespace().toURLEncode() + "/versions";
                 if (pagination != null) {
                     totalQuery += "?" + pagination.toString();
+                }
+                HttpsURLConnection connection = connect(cm, "GET", totalQuery);
+                connection.setDoInput(true);
+                checkResponseCode(connection, OrePermission.View_Public_Info);
+                OreVersionList resultList = new OreVersionList(ConnectionManager.parseJson(connection), project, OreVersion.class, pagination);
+                for (OreVersion v : resultList.getResult())
+                    cm.cache.cacheVersion(project.getPluginId().toLowerCase(), v);
+                return resultList;
+            } catch (IOException e) {
+                throw new NoResultException(e);
             }
-            HttpsURLConnection connection = connect(cm, "GET",totalQuery);
-            connection.setDoInput(true);
-            if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                tryPrintErrorBody(connection);
-                throw connection.getResponseCode()==403?new MissingPermissionException(OrePermission.View_Public_Info):new NoResultException(connection.getResponseMessage());
-            }
-            OreVersionList resultList = new OreVersionList(ConnectionManager.parseJson(connection), project, OreVersion.class, pagination);
-            for (OreVersion v : resultList.getResult())
-                cm.cache.cacheVersion(project.getPluginId().toLowerCase(), v);
-            return resultList;
-        } catch (IOException e) {
-            throw new NoResultException(e);
-        }};
+        };
     }
 
     static Supplier<OreVersion> getVersion(ConnectionManager cm, OreProjectReference project, String versionName) {
-        return ()->{try {
-            HttpsURLConnection connection = connect(cm, "GET", "/projects/" + project.getNamespace().toURLEncode() + "/versions/" + URLEncoder.encode(versionName, "UTF-8"));
-            connection.setDoInput(true);
-            if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                if (connection.getResponseCode()!=404) tryPrintErrorBody(connection);
-                throw connection.getResponseCode()==403?new MissingPermissionException(OrePermission.View_Public_Info):new NoResultException(connection.getResponseMessage());
+        return () -> {
+            try {
+                HttpsURLConnection connection = connect(cm, "GET", "/projects/" + project.getNamespace().toURLEncode() + "/versions/" + URLEncoder.encode(versionName, "UTF-8"));
+                connection.setDoInput(true);
+                checkResponseCode(connection, OrePermission.View_Public_Info);
+                return cm.cache.cacheVersion(project.getPluginId(), new OreVersion(project.toReference(), ConnectionManager.parseJson(connection)));
+            } catch (IOException e) {
+                throw new NoResultException(e);
             }
-            return cm.cache.cacheVersion(project.getPluginId(), new OreVersion(project.toReference(), ConnectionManager.parseJson(connection)));
-        } catch (IOException e) {
-            throw new NoResultException(e);
-        }};
+        };
     }
 
     static Supplier<String> getVerionChangelog(ConnectionManager cm, OreVersion version) {
         return ()->{try {
             HttpsURLConnection connection = connect(cm, "GET", "/projects/" + version.getProjectRef().getNamespace().toURLEncode() + "/versions/" + version.getURLSafeName() + "/changelog");
             connection.setDoInput(true);
-            if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                if (connection.getResponseCode()!=404) tryPrintErrorBody(connection);
-                throw connection.getResponseCode()==403?new MissingPermissionException(OrePermission.View_Public_Info):new NoResultException(connection.getResponseMessage());
-            }
+            checkResponseCode(connection, OrePermission.View_Public_Info);
             String changelog = ConnectionManager.parseJson(connection).get("changelog").getAsString();
             System.out.println(changelog);
             version.updateChangelog(changelog);
@@ -238,7 +254,7 @@ class NetTasks {
                 connection.setDoInput(true);
                 if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
                     tryPrintErrorBody(connection);
-                    throw connection.getResponseCode()==403?new MissingPermissionException():new NoResultException(connection.getResponseMessage());
+                    throw new NoResultException(connection.getResponseMessage());
                 }
                 JsonObject response = new JsonParser().parse(new InputStreamReader(connection.getInputStream())).getAsJsonObject();
                 String string = response.get("url").getAsString();
@@ -255,10 +271,7 @@ class NetTasks {
         return ()->{try {
             HttpsURLConnection connection = connect(cm, "GET", "/permissions?"+query);
             connection.setDoInput(true);
-            if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                if (connection.getResponseCode()!=404) tryPrintErrorBody(connection);
-                throw new NoResultException(connection.getResponseMessage());
-            }
+            checkResponseCode(connection, null);
             return new OrePermissionGrant(ConnectionManager.parseJson(connection));
         } catch (IOException e) {
             throw new NoResultException(e);
@@ -272,10 +285,7 @@ class NetTasks {
             fullQuery += perms.stream().map(p->"permissions="+urlencoded(p.name().toLowerCase(Locale.ROOT))).collect(Collectors.joining("&"));
             HttpsURLConnection connection = connect(cm, "GET",fullQuery);
             connection.setDoInput(true);
-            if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                if (connection.getResponseCode()!=404) tryPrintErrorBody(connection);
-                throw new NoResultException(connection.getResponseMessage());
-            }
+            checkResponseCode(connection, null);
             return ConnectionManager.parseJson(connection).get("result").getAsBoolean();
         } catch (IOException e) {
             throw new NoResultException(e);

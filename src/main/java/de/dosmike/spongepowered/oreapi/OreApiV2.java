@@ -141,6 +141,14 @@ public class OreApiV2 implements AutoCloseable {
     }
 
     /**
+     * Deletes this project from ore and removes it from cache.<br>
+     * <b>This is permanent and can not be undone!</b>
+     */
+    public CompletableFuture<Void> deleteProject(OreProjectReference project) {
+        return enqueue(NetTasks.deleteProject(instance, project));
+    }
+
+    /**
      * The API has no direct way of searching projects by pluginId
      * but the seach also returns matches for pluginId.
      * This means we have to sift through all search results and remove all
