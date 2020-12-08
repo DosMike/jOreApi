@@ -34,9 +34,12 @@ public class OreProject extends OreProjectReference implements Serializable {
     @FromJson("category")
     @JsonTags("patchProject")
     OreCategory category;
+    /**
+     * the summary is limited to 120 characters
+     */
     @FromJson(value = "summary", optional = true)
     @JsonTags("patchProject")
-    String description;
+    String summary;
     @FromJson(value = "last_updated", mapper = TypeMappers.StringTimestampMapper.class)
     long lastUpdate;
     @FromJson("visibility")
@@ -72,8 +75,8 @@ public class OreProject extends OreProjectReference implements Serializable {
         return category;
     }
 
-    public String getDescription() {
-        return description;
+    public String getSummary() {
+        return summary;
     }
 
     public long getLastUpdate() {

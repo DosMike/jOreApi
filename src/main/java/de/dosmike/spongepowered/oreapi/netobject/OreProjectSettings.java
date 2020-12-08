@@ -9,6 +9,9 @@ import java.io.Serializable;
 
 public class OreProjectSettings implements Serializable {
 
+    /**
+     * this supports a maximum of 5 keywords
+     */
     @FromJson("keywords")
     @JsonTags("patchProject")
     String[] keywords;
