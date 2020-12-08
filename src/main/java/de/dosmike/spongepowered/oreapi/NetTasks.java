@@ -19,6 +19,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static de.dosmike.spongepowered.oreapi.ConnectionManager.tryPrintErrorBody;
+import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendField;
+import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendMethod;
 
 /**
  * If {@link OreApiV2} is "party in the front" and {@link ConnectionManager} is "business in the back", then this is?
@@ -79,6 +81,22 @@ class NetTasks {
         };
     }
 
+    static Supplier<OreProject> findByPluginId(ConnectionManager cm, String pluginId) {
+        return () -> {
+            OreProjectFilter filter = new OreProjectFilter();
+            filter.setQuery(pluginId);
+            OreProjectList result;
+            do {
+                result = projectSearch(cm, filter).get();
+                Optional<OreProject> project = result.getResult().stream().filter(p -> p.getPluginId().equals(pluginId)).findAny();
+                if (project.isPresent())
+                    return project.get();
+                filter = result.getPagination().getQueryNext();
+            } while (result.getPagination().hasMorePages());
+            throw new NoResultException("All results checked");
+        };
+    }
+
     /**
      * Use an OreProject.Builder builder instead of calling this manually.
      * It also provides nice setters.
@@ -119,29 +137,35 @@ class NetTasks {
         };
     }
 
-    static Supplier<OreProject> findByPluginId(ConnectionManager cm, String pluginId) {
+    public static Supplier<OreProject> updateProject(ConnectionManager cm, OreProject project) {
+        //get shadow namespace
         return () -> {
-            OreProjectFilter filter = new OreProjectFilter();
-            filter.setQuery(pluginId);
-            OreProjectList result;
-            do {
-                result = projectSearch(cm, filter).get();
-                Optional<OreProject> project = result.getResult().stream().filter(p -> p.getPluginId().equals(pluginId)).findAny();
-                if (project.isPresent())
-                    return project.get();
-                filter = result.getPagination().getQueryNext();
-            } while (result.getPagination().hasMorePages());
-            throw new NoResultException("All results checked");
+            OreNamespace ns = friendField(project, "shadowNamespace");
+            String requestBody = friendMethod(project, "getPatchJson").toString();
+            cm.cache.untrack(project);
+            try {
+                HttpsURLConnection connection = connect(cm, "PATCH", "/projects/" + ns.toURLEncode());
+                connection.setDoInput(true);
+                ConnectionManager.postData(connection, requestBody);
+                if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
+                    if (connection.getResponseCode() != 404) tryPrintErrorBody(connection);
+                    throw connection.getResponseCode() == 403 ? new MissingPermissionException(OrePermission.Create_Project) : new NoResultException(connection.getResponseMessage());
+                }
+                return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
+            } catch (IOException e) {
+                throw new NoResultException(e);
+            }
         };
     }
     //endregion
 
     //region version
     static Supplier<OreVersionList> listVersions(ConnectionManager cm, OreProjectReference project, @Nullable OrePaginationFilter pagination) {
-        return ()->{try {
-            String totalQuery = "/projects/"+ project.getNamespace().toURLEncode()+"/versions";
-            if (pagination != null) {
-                totalQuery += "?"+pagination.toString();
+        return () -> {
+            try {
+                String totalQuery = "/projects/" + project.getNamespace().toURLEncode() + "/versions";
+                if (pagination != null) {
+                    totalQuery += "?" + pagination.toString();
             }
             HttpsURLConnection connection = connect(cm, "GET",totalQuery);
             connection.setDoInput(true);

@@ -2,6 +2,7 @@ package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
+import de.dosmike.spongepowered.oreapi.utility.JsonTags;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 
 import java.io.Serializable;
@@ -11,6 +12,7 @@ import java.net.URLEncoder;
 public class OreNamespace implements Serializable {
 
     @FromJson("owner")
+    @JsonTags("patchProject")
     String owner;
     @FromJson("slug")
     String slug;

@@ -1,5 +1,7 @@
 package de.dosmike.spongepowered.oreapi.utility;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +37,26 @@ public class ReflectionHelper {
             return isPrimitiveWrapperOf(from, to);
         }
         return false;
+    }
+
+    public static <T> T friendField(Object instance, String name) {
+        try {
+            Field f = instance.getClass().getDeclaredField(name);
+            f.setAccessible(true);
+            return (T) f.get(instance);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    public static <T> T friendMethod(Object instance, String name) {
+        try {
+            Method m = instance.getClass().getDeclaredMethod(name);
+            m.setAccessible(true);
+            return (T) m.invoke(instance);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
     }
 
 }

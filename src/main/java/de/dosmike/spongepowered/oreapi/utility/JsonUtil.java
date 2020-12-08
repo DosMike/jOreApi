@@ -1,11 +1,14 @@
 package de.dosmike.spongepowered.oreapi.utility;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 
 import java.lang.reflect.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Could probably change to gson, but this was fun.
@@ -13,6 +16,7 @@ import java.util.function.Function;
  */
 public class JsonUtil {
 
+    //region from json
     public static void fillSelf(Object instance, JsonObject source) {
         Class<?> clz = instance.getClass();
         while (clz != Object.class) {
@@ -58,11 +62,11 @@ public class JsonUtil {
                     mapper = (TypeMapper<Object, Object>)con.newInstance();
 
                     //check that mapper output type is field type
-                    if (!ReflectionHelper.isAssignable(mapper.getOutputType(), elementType)) {
+                    if (!ReflectionHelper.isAssignable(mapper.getNativeType(), elementType)) {
                         throw new RuntimeException("Mapper output is not assignable to field type");
                     }
                     //input type is now the element type
-                    elementType = mapper.getInputType();
+                    elementType = mapper.getSourceType();
 
                 } catch (IllegalAccessException | NoSuchMethodException | InstantiationException | InvocationTargetException e) {
                     throw new RuntimeException("Could not instantiate mapper '"+j.mapper().getSimpleName()+"'");
@@ -118,11 +122,11 @@ public class JsonUtil {
                         //map array to field type
                         Object tmp = Array.newInstance(f.getClass(), Array.getLength(result));
                         for (int i = 0; i < Array.getLength(result); i++) {
-                            Array.set(tmp,i, mapper.apply ( Array.get(result,i) ) );
+                            Array.set(tmp, i, mapper.fromSource(Array.get(result, i)));
                         }
                         f.set(instance, tmp);
                     } else {
-                        f.set(instance, mapper.apply( result ));
+                        f.set(instance, mapper.fromSource(result));
                     }
                 } else {
                     f.set(instance, result);
@@ -186,15 +190,173 @@ public class JsonUtil {
             }
         }
     }
+    //endregion
 
-    private static <T extends Object> T[] parseArray(JsonElement element, Function<JsonElement,T> elementParser, Class<T> tClass) {
-        if (!element.isJsonArray()) return (T[])Array.newInstance(tClass, 0);
+    //region to json
+    private static <T extends Object> T[] parseArray(JsonElement element, Function<JsonElement, T> elementParser, Class<T> tClass) {
+        if (!element.isJsonArray()) return (T[]) Array.newInstance(tClass, 0);
         JsonArray array = element.getAsJsonArray();
-        T[] instance = (T[])Array.newInstance(tClass, array.size());
+        T[] instance = (T[]) Array.newInstance(tClass, array.size());
         for (int i = 0; i < array.size(); i++) {
             instance[i] = elementParser.apply(array.get(i));
         }
         return instance;
     }
 
+    /**
+     * will convert all annotated fields into json elements and attach them to a json object.
+     * subclasses to not have to implement a toJson function to be added as object, as only the
+     * FromJson annotation will be used.
+     *
+     * @param instance the object to jsonify
+     * @return the object as jso
+     */
+    public static JsonObject buildJson(Object instance, String... tags) {
+        JsonObject plain = new JsonObject();
+        List<String> requiredTags = Arrays.asList(tags);
+
+        Class<?> clz = instance.getClass();
+        while (clz != Object.class) {
+            buildJson(instance, clz, plain, requiredTags);
+            clz = clz.getSuperclass();
+        }
+
+        return plain;
+    }
+
+    private static void buildJson(Object instance, Class<?> forClass, JsonObject target, Collection<String> tags) {
+        for (Field f : forClass.getDeclaredFields()) {
+            FromJson j = f.getAnnotation(FromJson.class);
+            if (j == null) continue;
+            if (!tags.isEmpty()) {
+                JsonTags t = f.getAnnotation(JsonTags.class);
+                Set<String> putTags = Arrays.stream(t.value()).collect(Collectors.toSet());
+                if (!putTags.containsAll(tags)) continue;
+            }
+            try {
+                Class<?> elementType = f.getType();
+                boolean asArray = false;
+                if (elementType.isArray()) {
+                    asArray = true;
+                    elementType = elementType.getComponentType();
+                }
+
+                TypeMapper<Object, Object> mapper = null;
+                if (!TypeMappers.IdentityMapper.class.isAssignableFrom(j.mapper())) try {
+                    //construct mapper
+                    Constructor<?> con = j.mapper().getConstructor();
+                    con.setAccessible(true);
+                    mapper = (TypeMapper<Object, Object>) con.newInstance();
+
+                    //check that mapper output type is field type
+                    if (!ReflectionHelper.isAssignable(mapper.getNativeType(), elementType)) {
+                        throw new RuntimeException("Mapper input is not compatible with field type");
+                    }
+                    //input type is now the element type
+                    elementType = mapper.getSourceType();
+
+                } catch (IllegalAccessException | NoSuchMethodException | InstantiationException | InvocationTargetException e) {
+                    throw new RuntimeException("Could not instantiate mapper '" + j.mapper().getSimpleName() + "'");
+                }
+
+                Function<Object, JsonElement> mingle;
+                if (ReflectionHelper.isAssignable(elementType, String.class)) {
+                    if (asArray)
+                        mingle = (a) -> mangledArray(a, JsonUtil::mangledString);
+                    else
+                        mingle = JsonUtil::mangledString;
+                } else if (ReflectionHelper.isAssignable(elementType, boolean.class)) {
+                    if (asArray)
+                        mingle = (a) -> mangledArray(a, JsonUtil::mangledBoolean);
+                    else
+                        mingle = JsonUtil::mangledBoolean;
+                } else if (ReflectionHelper.isAssignable(elementType, long.class) ||
+                        ReflectionHelper.isAssignable(elementType, int.class)) {
+                    if (asArray)
+                        mingle = (a) -> mangledArray(a, JsonUtil::mangledNumber);
+                    else
+                        mingle = JsonUtil::mangledNumber;
+                } else if (elementType.isEnum()) {
+                    if (asArray)
+                        mingle = (a) -> mangledArray(a, JsonUtil::mangledEnum);
+                    else
+                        mingle = JsonUtil::mangledEnum;
+                } else {
+                    if (asArray)
+                        mingle = (a) -> mangledArray(a, JsonUtil::mangledObject);
+                    else
+                        mingle = JsonUtil::mangledObject;
+                }
+
+                Object raw = f.get(instance);
+
+                //prepare native
+                Object mapOut;
+                if (mapper != null) {
+                    if (asArray) {
+                        mapOut = Array.newInstance(mapper.getSourceType(), Array.getLength(raw));
+                        for (int i = 0; i < Array.getLength(raw); i++) {
+                            Array.set(mapOut, i, mapper.fromNative(Array.get(raw, i)));
+                        }
+                    } else {
+                        mapOut = mapper.fromNative(raw);
+                    }
+                } else {
+                    mapOut = raw;
+                }
+
+                JsonElement value = mingle.apply(mapOut);
+
+                String[] pelem = j.value().split("\\.");
+                if (pelem.length > 1) {
+                    JsonObject onto = target;
+                    for (int i = 0; i < pelem.length - 1; i++) {
+                        if (!onto.has(pelem[i]) || !onto.get(pelem[i]).isJsonObject()) {
+                            onto.add(pelem[i], new JsonObject());
+                        }
+                        onto = onto.getAsJsonObject(pelem[i]);
+                    }
+                    onto.add(pelem[pelem.length - 1], value);
+                } else {
+                    target.add(j.value(), value);
+                }
+            } catch (IllegalAccessException e) {
+                String rem = "\nObject Type: " + instance.getClass().getSimpleName();
+                throw new RuntimeException("Could not fill field " + f.getName() + rem);
+            } catch (Throwable e) {
+                String rem = "\nObject Type: " + instance.getClass().getSimpleName();
+                throw new RuntimeException("Could not fill field " + f.getName() + rem, e);
+            }
+        }
+    }
+
+    private static JsonElement mangledString(Object s) {
+        return s == null ? JsonNull.INSTANCE : new JsonPrimitive((String) s);
+    }
+
+    private static JsonElement mangledBoolean(Object n) {
+        return n == null ? JsonNull.INSTANCE : new JsonPrimitive((Boolean) n);
+    }
+
+    private static JsonElement mangledNumber(Object n) {
+        return n == null ? JsonNull.INSTANCE : new JsonPrimitive((Number) n);
+    }
+
+    private static JsonElement mangledEnum(Object e) {
+        return e == null ? JsonNull.INSTANCE : new JsonPrimitive(((Enum<?>) e).name());
+    }
+
+    private static JsonElement mangledObject(Object o) {
+        return o == null ? JsonNull.INSTANCE : buildJson(o);
+    }
+
+    private static JsonArray mangledArray(Object arrayObject, Function<Object, JsonElement> elementMangler) {
+        JsonArray jar = new JsonArray();
+        for (int i = 0; i < Array.getLength(arrayObject); i++) {
+            jar.set(i, elementMangler.apply(Array.get(arrayObject, i)));
+        }
+        return jar;
+    }
+
+    //endregion
 }

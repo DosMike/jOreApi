@@ -1,8 +1,11 @@
 package de.dosmike.spongepowered.oreapi.utility;
 
-import java.util.function.Function;
+public interface TypeMapper<T, R> {
+    Class<T> getSourceType();
 
-public interface TypeMapper<T,R> extends Function<T,R> {
-    Class<T> getInputType();
-    Class<R> getOutputType();
+    Class<R> getNativeType();
+
+    R fromSource(T t);
+
+    T fromNative(R t);
 }

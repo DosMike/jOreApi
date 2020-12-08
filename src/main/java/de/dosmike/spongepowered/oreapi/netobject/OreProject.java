@@ -3,6 +3,7 @@ package de.dosmike.spongepowered.oreapi.netobject;
 import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
+import de.dosmike.spongepowered.oreapi.utility.JsonTags;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
 
@@ -12,29 +13,43 @@ import java.util.concurrent.CompletableFuture;
 
 public class OreProject extends OreProjectReference implements Serializable {
 
+    /**
+     * used for updating. if you change the name/owner you can't update the repository
+     * because the change needs to be pushed against the original namespace.<br>
+     * This field will be set on construction, and be used when {@link #update} is called.
+     * After that, this instance will be invalid.
+     * TODO: maybe mark the instance invalid with a flag?
+     */
+    final OreNamespace shadowNamespace;
+
     @FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
     long createdAt;
     @FromJson("name")
+    @JsonTags("patchProject")
     String name;
     @FromJson("promoted_versions")
     OrePromotedVersion[] promotedVersions;
     @FromJson("stats")
     OreProjectStatsAll stats;
     @FromJson("category")
+    @JsonTags("patchProject")
     OreCategory category;
     @FromJson(value = "summary", optional = true)
+    @JsonTags("patchProject")
     String description;
     @FromJson(value = "last_updated", mapper = TypeMappers.StringTimestampMapper.class)
     long lastUpdate;
     @FromJson("visibility")
     OreVisibility visibility;
     @FromJson("settings")
+    @JsonTags("patchProject")
     OreProjectSettings settings;
     @FromJson("icon_url")
     String urlIcon;
 
     public OreProject(JsonObject object) {
         JsonUtil.fillSelf(this, object);
+        shadowNamespace = new OreNamespace(namespace.owner, namespace.slug);
     }
 
     public long getCreatedAt() {
@@ -127,5 +142,27 @@ public class OreProject extends OreProjectReference implements Serializable {
         return new Builder();
     }
     //endregion
+
+    public JsonObject toJson() {
+        return JsonUtil.buildJson(this);
+    }
+
+    private JsonObject getPatchJson() {
+        return JsonUtil.buildJson(this, "patchProject");
+    }
+
+    /**
+     * convenience function for OreApiV2.updateProject(this).
+     * If you want to save changes in the repository, you'll have to update it through this method.
+     * If you changed parts of the namespace (owner, project name) all existing instances will be
+     * invalid and requests involving those will most likely fail. Use the result of this method
+     * instead.
+     *
+     * @param api the api instance to use for this request
+     * @return a completable future that will return the updated instance from remote.
+     */
+    public CompletableFuture<OreProject> update(OreApiV2 api) {
+        return api.updateProject(this);
+    }
 
 }

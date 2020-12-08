@@ -1,11 +1,15 @@
 package de.dosmike.spongepowered.oreapi;
 
-import de.dosmike.spongepowered.oreapi.netobject.*;
+import de.dosmike.spongepowered.oreapi.netobject.OreNamespace;
+import de.dosmike.spongepowered.oreapi.netobject.OreProject;
+import de.dosmike.spongepowered.oreapi.netobject.OreProjectReference;
+import de.dosmike.spongepowered.oreapi.netobject.OreVersion;
 import de.dosmike.spongepowered.oreapi.utility.CachingCollection;
 
-import java.io.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendField;
 
 public class ObjectCache {
 
@@ -66,8 +70,39 @@ public class ObjectCache {
         //noinspection ResultOfMethodCallIgnored
         oreProjectCache.size();
         Set<String> vkeys = new HashSet<>();
-        oreVersionCache.forEach((k,v)->{if (vkeys.size()==0) vkeys.add(k);});
+        oreVersionCache.forEach((k, v) -> {
+            if (vkeys.size() == 0) vkeys.add(k);
+        });
         for (String k : vkeys) oreVersionCache.remove(k);
 
+    }
+
+    public void untrack(OreNamespace ns) {
+        //from versions
+        Set<String> invalidatedKeys = new HashSet<>();
+        for (Map.Entry<String, CachingCollection<OreVersion>> entry : oreVersionCache.entrySet()) {
+            if (entry.getValue().stream().anyMatch(v -> v.getProjectRef().getNamespace().equals(ns)))
+                invalidatedKeys.add(entry.getKey());
+        }
+        for (String k : invalidatedKeys) oreVersionCache.remove(k);
+        //from project
+        oreProjectCache.removeIf(p -> friendField(p, "shadowNamespace").equals(ns));
+    }
+
+    public void untrack(String pluginId) {
+        //from versions
+        oreVersionCache.remove(pluginId.toLowerCase(Locale.ROOT));
+        //from plugins
+        oreProjectCache.removeIf(p -> p.getPluginId().equalsIgnoreCase(pluginId));
+    }
+
+    public void untrack(OreProjectReference project) {
+        untrack(project.getPluginId());
+    }
+
+    public void untrack(OreVersion version) {
+        CachingCollection<OreVersion> vcache = oreVersionCache.get(version.getProjectRef().getPluginId().toLowerCase(Locale.ROOT));
+        if (vcache == null) return;
+        vcache.removeIf(v -> v.getName().equals(version.getName()));
     }
 }

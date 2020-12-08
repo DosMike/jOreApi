@@ -1,36 +1,49 @@
 package de.dosmike.spongepowered.oreapi.utility;
 
-import de.dosmike.spongepowered.oreapi.ConnectionManager;
-
 public class TypeMappers {
 
     // this mapper should not be used
-    public static class IdentityMapper implements TypeMapper<Object,Object> {
+    public static class IdentityMapper implements TypeMapper<Object, Object> {
         @Override
-        public Class<Object> getInputType() {
+        public Class<Object> getSourceType() {
             return Object.class;
         }
+
         @Override
-        public Class<Object> getOutputType() {
+        public Class<Object> getNativeType() {
             return Object.class;
         }
+
         @Override
-        public Object apply(Object x) {
+        public Object fromSource(Object x) {
+            return x;
+        }
+
+        @Override
+        public Object fromNative(Object x) {
             return x;
         }
     }
+
     public static class StringTimestampMapper implements TypeMapper<String, Long> {
         @Override
-        public Class<String> getInputType() {
+        public Class<String> getSourceType() {
             return String.class;
         }
+
         @Override
-        public Class<Long> getOutputType() {
+        public Class<Long> getNativeType() {
             return Long.class;
         }
+
         @Override
-        public Long apply(String s) {
+        public Long fromSource(String s) {
             return RepositoryTimestamp.toNative(s);
+        }
+
+        @Override
+        public String fromNative(Long x) {
+            return RepositoryTimestamp.fromNative(x);
         }
     }
 

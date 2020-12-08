@@ -128,6 +128,19 @@ public class OreApiV2 implements AutoCloseable {
     }
 
     /**
+     * If you want to save changes in the repository, you'll have to update it through this method.
+     * If you changed parts of the namespace (owner, project name) all existing instances will be
+     * invalid and requests involving those will most likely fail. Use the result of this method
+     * instead.
+     *
+     * @param project the project you want to update on ore
+     * @return a completable future that will return the updated instance from remote.
+     */
+    public CompletableFuture<OreProject> updateProject(OreProject project) {
+        return enqueue(NetTasks.updateProject(instance, project));
+    }
+
+    /**
      * The API has no direct way of searching projects by pluginId
      * but the seach also returns matches for pluginId.
      * This means we have to sift through all search results and remove all
