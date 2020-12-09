@@ -2,10 +2,7 @@ package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
-import de.dosmike.spongepowered.oreapi.utility.FromJson;
-import de.dosmike.spongepowered.oreapi.utility.JsonTags;
-import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
-import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
+import de.dosmike.spongepowered.oreapi.utility.*;
 
 import java.io.Serializable;
 import java.util.Locale;
@@ -20,6 +17,7 @@ public class OreProject extends OreProjectReference implements Serializable {
      * After that, this instance will be invalid.
      * TODO: maybe mark the instance invalid with a flag?
      */
+    @ReflectiveUse
     final OreNamespace shadowNamespace;
 
     @FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
@@ -55,6 +53,7 @@ public class OreProject extends OreProjectReference implements Serializable {
         shadowNamespace = new OreNamespace(namespace.owner, namespace.slug);
     }
 
+    //region getter
     public long getCreatedAt() {
         return createdAt;
     }
@@ -94,6 +93,51 @@ public class OreProject extends OreProjectReference implements Serializable {
     public String getUrlIcon() {
         return urlIcon;
     }
+    //endregion
+
+    //region setter
+
+    /**
+     * Changes the name of the project. This does not change the project id (plugin id)!
+     * Once updating the name the project slug within the namespace might also change as it's directly related to the name.
+     * If you want to commit changes to this value you'll have to update the owning object on the remote.
+     *
+     * @param name the new name for this project
+     * @see OreApiV2#updateProject
+     * @see OreProject#update
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Changes the category for this project.
+     * If you want to commit changes to this value you'll have to update the owning object on the remote.
+     *
+     * @param category the new name for this project
+     * @see OreApiV2#updateProject
+     * @see OreProject#update
+     */
+    public void setCategory(OreCategory category) {
+        this.category = category;
+    }
+
+    /**
+     * Set the new summary for this project. The summary is displayed below the name in project listings.
+     * Keep in mind that the summary is limited to 120 characters. Trying to set a longer name will throw an exception.
+     * If you want to commit changes to this value you'll have to update the owning object on the remote.
+     *
+     * @param summary the new name for this project
+     * @throws IllegalArgumentException if the summary exceeds the limit of 120 characters.
+     * @see OreApiV2#updateProject
+     * @see OreProject#update
+     */
+    public void setSummary(String summary) {
+        if (summary.length() > 120)
+            throw new IllegalArgumentException("The summary is not allowed to exceed 120 characters");
+        this.summary = summary;
+    }
+    //endregion
 
     //Region builder
     public static class Builder {
@@ -150,6 +194,7 @@ public class OreProject extends OreProjectReference implements Serializable {
         return JsonUtil.buildJson(this);
     }
 
+    @ReflectiveUse
     private JsonObject getPatchJson() {
         return JsonUtil.buildJson(this, "patchProject");
     }
