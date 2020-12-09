@@ -1,11 +1,11 @@
 package de.dosmike.spongepowered.oreapi.utility;
 
 public interface TypeMapper<T, R> {
-    Class<T> getSourceType();
+	Class<T> getSourceType();
 
-    Class<R> getNativeType();
+	Class<R> getNativeType();
 
-    R fromSource(T t);
+	R fromSource(T t);
 
-    T fromNative(R t);
+	T fromNative(R t);
 }

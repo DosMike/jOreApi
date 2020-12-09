@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 
-
 import java.io.Serializable;
 
 /**
@@ -16,20 +15,20 @@ import java.io.Serializable;
  */
 public class OrePromotedVersion implements Serializable {
 
-    @FromJson("version")
-    String version;
-    @FromJson("platforms")
-    OrePlatform[] platforms;
+	@FromJson("version")
+	String version;
+	@FromJson("platforms")
+	OrePlatform[] platforms;
 
-    public OrePromotedVersion(JsonObject object) {
-        JsonUtil.fillSelf(this,object);
-    }
+	public OrePromotedVersion(JsonObject object) {
+		JsonUtil.fillSelf(this, object);
+	}
 
-    public String getVersion() {
-        return version;
-    }
+	public String getVersion() {
+		return version;
+	}
 
-    public OrePlatform[] getPlatforms() {
-        return platforms;
-    }
+	public OrePlatform[] getPlatforms() {
+		return platforms;
+	}
 }

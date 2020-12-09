@@ -6,18 +6,18 @@ package de.dosmike.spongepowered.oreapi.exception;
  * Otherwise the message will most likely contain the http response-message.
  */
 public class NoResultException extends RuntimeException {
-    public NoResultException() {
-    }
+	public NoResultException() {
+	}
 
-    public NoResultException(String message) {
-        super(message);
-    }
+	public NoResultException(String message) {
+		super(message);
+	}
 
-    public NoResultException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public NoResultException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-    public NoResultException(Throwable cause) {
-        super(cause);
-    }
+	public NoResultException(Throwable cause) {
+		super(cause);
+	}
 }

@@ -13,33 +13,37 @@ import java.util.Locale;
  */
 public class OreProjectReference implements Serializable {
 
-    @FromJson("plugin_id")
-    String pluginId;
-    @FromJson("namespace")
-    @JsonTags("patchProject")
-    OreNamespace namespace;
+	@FromJson("plugin_id")
+	String pluginId;
+	@FromJson("namespace")
+	@JsonTags("patchProject")
+	OreNamespace namespace;
 
-    protected OreProjectReference(){}
-    protected OreProjectReference(JsonObject object){
-        JsonUtil.fillSelf(this, object);
-    }
-    private OreProjectReference(OreProjectReference project) {
-        this.pluginId = project.pluginId;
-        this.namespace = new OreNamespace(project.namespace.owner, project.namespace.slug);
-    }
+	protected OreProjectReference() {
+	}
 
-    public static OreProjectReference fromProject(OreProject project) {
-        return new OreProjectReference(project);
-    }
-    public OreProjectReference toReference() {
-        return new OreProjectReference(this);
-    }
+	protected OreProjectReference(JsonObject object) {
+		JsonUtil.fillSelf(this, object);
+	}
 
-    public String getPluginId() {
-        return pluginId.toLowerCase(Locale.ROOT);
-    }
+	private OreProjectReference(OreProjectReference project) {
+		this.pluginId = project.pluginId;
+		this.namespace = new OreNamespace(project.namespace.owner, project.namespace.slug);
+	}
 
-    public OreNamespace getNamespace() {
-        return namespace;
-    }
+	public static OreProjectReference fromProject(OreProject project) {
+		return new OreProjectReference(project);
+	}
+
+	public OreProjectReference toReference() {
+		return new OreProjectReference(this);
+	}
+
+	public String getPluginId() {
+		return pluginId.toLowerCase(Locale.ROOT);
+	}
+
+	public OreNamespace getNamespace() {
+		return namespace;
+	}
 }

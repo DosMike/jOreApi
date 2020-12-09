@@ -14,35 +14,35 @@ import java.io.Serializable;
  */
 public class OreSession extends Expiring<String> implements Serializable {
 
-    public OreSession(JsonObject json) {
-        try {
-            value = json.get("session").getAsString();
-            expirationDate = RepositoryTimestamp.toNative(json.get("expires").getAsString());
-        } catch (Throwable e) {
-            value = null;
-            expirationDate = 0L;
-        }
-    }
+	public OreSession(JsonObject json) {
+		try {
+			value = json.get("session").getAsString();
+			expirationDate = RepositoryTimestamp.toNative(json.get("expires").getAsString());
+		} catch (Throwable e) {
+			value = null;
+			expirationDate = 0L;
+		}
+	}
 
-    public OreSession() {
-    }
+	public OreSession() {
+	}
 
-    /**
-     * @param connection to authorize
-     * @return connection for piping
-     */
-    public HttpsURLConnection authenticate(HttpsURLConnection connection) {
-        if (isAlive())
-            connection.setRequestProperty("Authorization", "OreApi session=" + value);
-        return connection;
-    }
+	/**
+	 * @param connection to authorize
+	 * @return connection for piping
+	 */
+	public HttpsURLConnection authenticate(HttpsURLConnection connection) {
+		if (isAlive())
+			connection.setRequestProperty("Authorization", "OreApi session=" + value);
+		return connection;
+	}
 
-    /**
-     * Should not be called manually.
-     */
-    public void destroy() {
-        value = null;
-        expirationDate = 0L;
-    }
+	/**
+	 * Should not be called manually.
+	 */
+	public void destroy() {
+		value = null;
+		expirationDate = 0L;
+	}
 
 }

@@ -13,39 +13,42 @@ import java.io.Serializable;
  */
 public class OrePlatform implements Serializable {
 
-    @FromJson("platform")
-    String platform;
-    @FromJson(value = "platform_version", optional = true)
-    String platformVersion;
-    @FromJson(value = "display_platform_version", optional = true)
-    String displayPlatformVersion;
-    @FromJson(value = "minecraft_version", optional = true)
-    String minecraftVersion;
+	@FromJson("platform")
+	String platform;
+	@FromJson(value = "platform_version", optional = true)
+	String platformVersion;
+	@FromJson(value = "display_platform_version", optional = true)
+	String displayPlatformVersion;
+	@FromJson(value = "minecraft_version", optional = true)
+	String minecraftVersion;
 
-    public OrePlatform(JsonObject object) {
-        JsonUtil.fillSelf(this, object);
-    }
+	public OrePlatform(JsonObject object) {
+		JsonUtil.fillSelf(this, object);
+	}
 
-    public String getName() {
-        return platform;
-    }
-    public String getPlatformVersion() {
-        return platformVersion;
-    }
-    public String getDisplayPlatformVersion() {
-        return displayPlatformVersion;
-    }
-    public String getMinecraftVersion() {
-        return minecraftVersion;
-    }
+	public String getName() {
+		return platform;
+	}
 
-    @Override
-    public String toString() {
-        String val = platform + " (";
-        if (displayPlatformVersion != null) val+=displayPlatformVersion;
-        else if (platformVersion != null) val+=platformVersion;
-        else val += "v?";
-        if (minecraftVersion != null) val += ", " + minecraftVersion;
-        return val + ")";
-    }
+	public String getPlatformVersion() {
+		return platformVersion;
+	}
+
+	public String getDisplayPlatformVersion() {
+		return displayPlatformVersion;
+	}
+
+	public String getMinecraftVersion() {
+		return minecraftVersion;
+	}
+
+	@Override
+	public String toString() {
+		String val = platform + " (";
+		if (displayPlatformVersion != null) val += displayPlatformVersion;
+		else if (platformVersion != null) val += platformVersion;
+		else val += "v?";
+		if (minecraftVersion != null) val += ", " + minecraftVersion;
+		return val + ")";
+	}
 }

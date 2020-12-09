@@ -34,262 +34,270 @@ import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendMet
  */
 class NetTasks {
 
-    //region util
-    private static void auth(ConnectionManager cm) {
-        if (!cm.authenticate())
-            throw new IllegalStateException("Could not create API session");
-    }
+	//region util
+	private static void auth(ConnectionManager cm) {
+		if (!cm.authenticate())
+			throw new IllegalStateException("Could not create API session");
+	}
 
-    private static String urlencoded(String s) {
-        try {
-            return URLEncoder.encode(s, "UTF-8");
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
+	private static String urlencoded(String s) {
+		try {
+			return URLEncoder.encode(s, "UTF-8");
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    private static HttpsURLConnection connect(ConnectionManager connection, String method, String queryURI) throws IOException {
-        auth(connection);
-        ConnectionManager.limiter.takeRequest();
-        return connection.session.authenticate(connection.createConnection(method, queryURI));
-    }
+	private static HttpsURLConnection connect(ConnectionManager connection, String method, String queryURI) throws IOException {
+		auth(connection);
+		ConnectionManager.limiter.takeRequest();
+		return connection.session.authenticate(connection.createConnection(method, queryURI));
+	}
 
-    private static void checkResponseCode(HttpsURLConnection connection, OrePermission endPointPermission) throws IOException {
-        int rc = connection.getResponseCode();
-        if (rc < 200 || rc >= 400) {
-            if (rc == 403 && endPointPermission != null)
-                throw new MissingPermissionException(endPointPermission);
-            else if (rc != 404) // not 403 && not 404 -> print
-                tryPrintErrorBody(connection);
-            throw new NoResultException(connection.getResponseMessage());
-        }
-        //otherwise we good
-    }
-    //endregion
+	private static void checkResponseCode(HttpsURLConnection connection, OrePermission endPointPermission) throws IOException {
+		int rc = connection.getResponseCode();
+		if (rc < 200 || rc >= 400) {
+			if (rc == 403 && endPointPermission != null)
+				throw new MissingPermissionException(endPointPermission);
+			else if (rc != 404) // not 403 && not 404 -> print
+				tryPrintErrorBody(connection);
+			throw new NoResultException(connection.getResponseMessage());
+		}
+		//otherwise we good
+	}
+	//endregion
 
-    //region project
-    static Supplier<OreProjectList> projectSearch(ConnectionManager cm, OreProjectFilter filter) {
-        return () -> {
-            try {
-                HttpsURLConnection connection = connect(cm, "GET", "/projects?" + filter.toString());
-                connection.setDoInput(true);
-                checkResponseCode(connection, OrePermission.View_Public_Info);
-                OreProjectList resultList = new OreProjectList(ConnectionManager.parseJson(connection), OreProject.class, filter);
-                for (OreProject p : resultList.getResult())
-                cm.cache.cacheProject(p);
-            return resultList;
-        } catch (IOException e) {
-            throw new NoResultException(e);
-        }};
-    }
+	//region project
+	static Supplier<OreProjectList> projectSearch(ConnectionManager cm, OreProjectFilter filter) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/projects?" + filter.toString());
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				OreProjectList resultList = new OreProjectList(ConnectionManager.parseJson(connection), OreProject.class, filter);
+				for (OreProject p : resultList.getResult())
+					cm.cache.cacheProject(p);
+				return resultList;
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
 
-    static Supplier<OreProject> getProject(ConnectionManager cm, OreNamespace namespace) {
-        return ()->{try {
-            HttpsURLConnection connection = connect(cm, "GET", "/projects/" + namespace.toURLEncode());
-            connection.setDoInput(true);
-            checkResponseCode(connection, OrePermission.View_Public_Info);
-            return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
-        } catch (IOException e) {
-            throw new NoResultException(e);
-        }
-        };
-    }
+	static Supplier<OreProject> getProject(ConnectionManager cm, OreNamespace namespace) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/projects/" + namespace.toURLEncode());
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
 
-    static Supplier<OreProject> findByPluginId(ConnectionManager cm, String pluginId) {
-        return () -> {
-            OreProjectFilter filter = new OreProjectFilter();
-            filter.setQuery(pluginId);
-            OreProjectList result;
-            do {
-                result = projectSearch(cm, filter).get();
-                Optional<OreProject> project = result.getResult().stream().filter(p -> p.getPluginId().equals(pluginId)).findAny();
-                if (project.isPresent())
-                    return project.get();
-                filter = result.getPagination().getQueryNext();
-            } while (result.getPagination().hasMorePages());
-            throw new NoResultException("All results checked");
-        };
-    }
+	static Supplier<OreProject> findByPluginId(ConnectionManager cm, String pluginId) {
+		return () -> {
+			OreProjectFilter filter = new OreProjectFilter();
+			filter.setQuery(pluginId);
+			OreProjectList result;
+			do {
+				result = projectSearch(cm, filter).get();
+				Optional<OreProject> project = result.getResult().stream().filter(p -> p.getPluginId().equals(pluginId)).findAny();
+				if (project.isPresent())
+					return project.get();
+				filter = result.getPagination().getQueryNext();
+			} while (result.getPagination().hasMorePages());
+			throw new NoResultException("All results checked");
+		};
+	}
 
-    /**
-     * Use an OreProject.Builder builder instead of calling this manually.
-     * It also provides nice setters.
-     *
-     * @param cm      the api instance to send this through
-     * @param request request data
-     * @return the task requesting the project to be created
-     */
-    static Supplier<OreProject> createProject(ConnectionManager cm, JsonObject request) {
-        //validate request data
-        if (!request.has("name") || request.get("name").isJsonNull())
-            throw new IllegalStateException("name can't be null");
-        if (!request.has("plugin_id") || request.get("plugin_id").isJsonNull())
-            throw new IllegalStateException("pluginId can't be null");
-        if (!request.has("category") || request.get("category").isJsonNull())
-            throw new IllegalStateException("category can't be null");
-        if (!request.has("description") || request.get("description").isJsonNull())
-            throw new IllegalStateException("description can't be null");
-        if (!request.has("owner_name") || request.get("owner_name").isJsonNull())
-            throw new IllegalStateException("ownerName can't be null");
-        if (request.size() != 5)
-            throw new IllegalStateException("Invalid request object for CreateProject");
-        //prevent modification after validation until the task executes
-        final String requestBody = request.toString();
-        return () -> {
-            try {
-                HttpsURLConnection connection = connect(cm, "POST", "/projects");
-                connection.setDoInput(true);
-                ConnectionManager.postData(connection, requestBody);
-                checkResponseCode(connection, OrePermission.Create_Project);
-                return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
-            } catch (IOException e) {
-                throw new NoResultException(e);
-            }
-        };
-    }
+	/**
+	 * Use an OreProject.Builder builder instead of calling this manually.
+	 * It also provides nice setters.
+	 *
+	 * @param cm      the api instance to send this through
+	 * @param request request data
+	 * @return the task requesting the project to be created
+	 */
+	static Supplier<OreProject> createProject(ConnectionManager cm, JsonObject request) {
+		//validate request data
+		if (!request.has("name") || request.get("name").isJsonNull())
+			throw new IllegalStateException("name can't be null");
+		if (!request.has("plugin_id") || request.get("plugin_id").isJsonNull())
+			throw new IllegalStateException("pluginId can't be null");
+		if (!request.has("category") || request.get("category").isJsonNull())
+			throw new IllegalStateException("category can't be null");
+		if (!request.has("description") || request.get("description").isJsonNull())
+			throw new IllegalStateException("description can't be null");
+		if (!request.has("owner_name") || request.get("owner_name").isJsonNull())
+			throw new IllegalStateException("ownerName can't be null");
+		if (request.size() != 5)
+			throw new IllegalStateException("Invalid request object for CreateProject");
+		//prevent modification after validation until the task executes
+		final String requestBody = request.toString();
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "POST", "/projects");
+				connection.setDoInput(true);
+				ConnectionManager.postData(connection, requestBody);
+				checkResponseCode(connection, OrePermission.Create_Project);
+				return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
 
-    public static Supplier<OreProject> updateProject(ConnectionManager cm, OreProject project) {
-        //get shadow namespace
-        return () -> {
-            OreNamespace ns = friendField(project, "shadowNamespace");
-            String requestBody = friendMethod(project, "getPatchJson").toString();
-            cm.cache.untrack(project);
-            try {
-                HttpsURLConnection connection = connect(cm, "PATCH", "/projects/" + ns.toURLEncode());
-                connection.setDoInput(true);
-                ConnectionManager.postData(connection, requestBody);
-                checkResponseCode(connection, OrePermission.Edit_Subject_Settings);
-                return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
-            } catch (IOException e) {
-                throw new NoResultException(e);
-            }
-        };
-    }
+	public static Supplier<OreProject> updateProject(ConnectionManager cm, OreProject project) {
+		//get shadow namespace
+		return () -> {
+			OreNamespace ns = friendField(project, "shadowNamespace");
+			String requestBody = friendMethod(project, "getPatchJson").toString();
+			cm.cache.untrack(project);
+			try {
+				HttpsURLConnection connection = connect(cm, "PATCH", "/projects/" + ns.toURLEncode());
+				connection.setDoInput(true);
+				ConnectionManager.postData(connection, requestBody);
+				checkResponseCode(connection, OrePermission.Edit_Subject_Settings);
+				return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJson(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
 
-    public static Supplier<Void> deleteProject(ConnectionManager cm, OreProjectReference project) {
-        return () -> {
-            try {
-                cm.cache.untrack(project);
-                HttpsURLConnection connection = connect(cm, "DELETE", "/projects/" + project.getNamespace().toURLEncode());
-                connection.setDoInput(true);
-                checkResponseCode(connection, OrePermission.Hard_Delete_Project);
-                return null;
-            } catch (IOException e) {
-                throw new NoResultException(e);
-            }
-        };
-    }
-    //endregion
+	public static Supplier<Void> deleteProject(ConnectionManager cm, OreProjectReference project) {
+		return () -> {
+			try {
+				cm.cache.untrack(project);
+				HttpsURLConnection connection = connect(cm, "DELETE", "/projects/" + project.getNamespace().toURLEncode());
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.Hard_Delete_Project);
+				return null;
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+	//endregion
 
-    //region version
-    static Supplier<OreVersionList> listVersions(ConnectionManager cm, OreProjectReference project, @Nullable OrePaginationFilter pagination) {
-        return () -> {
-            try {
-                String totalQuery = "/projects/" + project.getNamespace().toURLEncode() + "/versions";
-                if (pagination != null) {
-                    totalQuery += "?" + pagination.toString();
-                }
-                HttpsURLConnection connection = connect(cm, "GET", totalQuery);
-                connection.setDoInput(true);
-                checkResponseCode(connection, OrePermission.View_Public_Info);
-                OreVersionList resultList = new OreVersionList(ConnectionManager.parseJson(connection), project, OreVersion.class, pagination);
-                for (OreVersion v : resultList.getResult())
-                    cm.cache.cacheVersion(project.getPluginId().toLowerCase(), v);
-                return resultList;
-            } catch (IOException e) {
-                throw new NoResultException(e);
-            }
-        };
-    }
+	//region version
+	static Supplier<OreVersionList> listVersions(ConnectionManager cm, OreProjectReference project, @Nullable OrePaginationFilter pagination) {
+		return () -> {
+			try {
+				String totalQuery = "/projects/" + project.getNamespace().toURLEncode() + "/versions";
+				if (pagination != null) {
+					totalQuery += "?" + pagination.toString();
+				}
+				HttpsURLConnection connection = connect(cm, "GET", totalQuery);
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				OreVersionList resultList = new OreVersionList(ConnectionManager.parseJson(connection), project, OreVersion.class, pagination);
+				for (OreVersion v : resultList.getResult())
+					cm.cache.cacheVersion(project.getPluginId().toLowerCase(), v);
+				return resultList;
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
 
-    static Supplier<OreVersion> getVersion(ConnectionManager cm, OreProjectReference project, String versionName) {
-        return () -> {
-            try {
-                HttpsURLConnection connection = connect(cm, "GET", "/projects/" + project.getNamespace().toURLEncode() + "/versions/" + URLEncoder.encode(versionName, "UTF-8"));
-                connection.setDoInput(true);
-                checkResponseCode(connection, OrePermission.View_Public_Info);
-                return cm.cache.cacheVersion(project.getPluginId(), new OreVersion(project.toReference(), ConnectionManager.parseJson(connection)));
-            } catch (IOException e) {
-                throw new NoResultException(e);
-            }
-        };
-    }
+	static Supplier<OreVersion> getVersion(ConnectionManager cm, OreProjectReference project, String versionName) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/projects/" + project.getNamespace().toURLEncode() + "/versions/" + URLEncoder.encode(versionName, "UTF-8"));
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				return cm.cache.cacheVersion(project.getPluginId(), new OreVersion(project.toReference(), ConnectionManager.parseJson(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
 
-    static Supplier<String> getVerionChangelog(ConnectionManager cm, OreVersion version) {
-        return ()->{try {
-            HttpsURLConnection connection = connect(cm, "GET", "/projects/" + version.getProjectRef().getNamespace().toURLEncode() + "/versions/" + version.getURLSafeName() + "/changelog");
-            connection.setDoInput(true);
-            checkResponseCode(connection, OrePermission.View_Public_Info);
-            String changelog = ConnectionManager.parseJson(connection).get("changelog").getAsString();
-            System.out.println(changelog);
-            version.updateChangelog(changelog);
-            return changelog;
-        } catch (IOException e) {
-            throw new NoResultException(e);
-        }};
-    }
+	static Supplier<String> getVerionChangelog(ConnectionManager cm, OreVersion version) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/projects/" + version.getProjectRef().getNamespace().toURLEncode() + "/versions/" + version.getURLSafeName() + "/changelog");
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				String changelog = ConnectionManager.parseJson(connection).get("changelog").getAsString();
+				System.out.println(changelog);
+				version.updateChangelog(changelog);
+				return changelog;
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
 
-    static Supplier<URL> getDownloadURL(ConnectionManager cm, OreVersion version) {
-        return ()->{
-            auth(cm);
-            try {
-                //if the plugin was reviewed, the url is static
-                if (version.getReviewState().equals(OreReviewState.Reviewed))
-                    return new URL(ConnectionManager.baseUrl+
-                            version.getProjectRef().getNamespace().toURLEncode()+"/versions/"+
-                            version.getURLSafeName()+"/download");
+	static Supplier<URL> getDownloadURL(ConnectionManager cm, OreVersion version) {
+		return () -> {
+			auth(cm);
+			try {
+				//if the plugin was reviewed, the url is static
+				if (version.getReviewState().equals(OreReviewState.Reviewed))
+					return new URL(ConnectionManager.baseUrl +
+							version.getProjectRef().getNamespace().toURLEncode() + "/versions/" +
+							version.getURLSafeName() + "/download");
 
-                // If the plugin was not approved, you are supposed to be prompted
-                // that the plugin might be risky to use.
-                // Since the api alone can't do that, I'll just query the target URL
-                URL requestUrl = new URL(ConnectionManager.baseUrl+
-                        version.getProjectRef().getNamespace().toURLEncode()+"/versions/"+
-                        version.getURLSafeName()+"/confirm?api=true");
+				// If the plugin was not approved, you are supposed to be prompted
+				// that the plugin might be risky to use.
+				// Since the api alone can't do that, I'll just query the target URL
+				URL requestUrl = new URL(ConnectionManager.baseUrl +
+						version.getProjectRef().getNamespace().toURLEncode() + "/versions/" +
+						version.getURLSafeName() + "/confirm?api=true");
 
-                HttpsURLConnection connection = cm.session.authenticate((HttpsURLConnection) requestUrl.openConnection());
-                connection.setInstanceFollowRedirects(true);
-                connection.setRequestProperty("User-Agent", cm.application);
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setRequestMethod("GET");
-                connection.setDoInput(true);
-                if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
-                    tryPrintErrorBody(connection);
-                    throw new NoResultException(connection.getResponseMessage());
-                }
-                JsonObject response = new JsonParser().parse(new InputStreamReader(connection.getInputStream())).getAsJsonObject();
-                String string = response.get("url").getAsString();
-                return new URL(string);
-            } catch (Exception e) {
-                throw new NoResultException(e);
-            }
-        };
-    }
-    //endregion
+				HttpsURLConnection connection = cm.session.authenticate((HttpsURLConnection) requestUrl.openConnection());
+				connection.setInstanceFollowRedirects(true);
+				connection.setRequestProperty("User-Agent", cm.application);
+				connection.setRequestProperty("Content-Type", "application/json");
+				connection.setRequestMethod("GET");
+				connection.setDoInput(true);
+				if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 400) {
+					tryPrintErrorBody(connection);
+					throw new NoResultException(connection.getResponseMessage());
+				}
+				JsonObject response = new JsonParser().parse(new InputStreamReader(connection.getInputStream())).getAsJsonObject();
+				String string = response.get("url").getAsString();
+				return new URL(string);
+			} catch (Exception e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+	//endregion
 
-    //region permission
-    static Supplier<OrePermissionGrant> getPermissions(ConnectionManager cm, String query) {
-        return ()->{try {
-            HttpsURLConnection connection = connect(cm, "GET", "/permissions?"+query);
-            connection.setDoInput(true);
-            checkResponseCode(connection, null);
-            return new OrePermissionGrant(ConnectionManager.parseJson(connection));
-        } catch (IOException e) {
-            throw new NoResultException(e);
-        }};
-    }
+	//region permission
+	static Supplier<OrePermissionGrant> getPermissions(ConnectionManager cm, String query) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/permissions?" + query);
+				connection.setDoInput(true);
+				checkResponseCode(connection, null);
+				return new OrePermissionGrant(ConnectionManager.parseJson(connection));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
 
-    static Supplier<Boolean> checkPermissions(ConnectionManager cm, String query, Collection<OrePermission> perms, boolean anyEnough) {
-        return ()->{try {
-            String fullQuery = "/permissions/"+(anyEnough?"hasAny":"hasAll")+"?"+query;
-            if (!query.isEmpty()) fullQuery+="&";
-            fullQuery += perms.stream().map(p->"permissions="+urlencoded(p.name().toLowerCase(Locale.ROOT))).collect(Collectors.joining("&"));
-            HttpsURLConnection connection = connect(cm, "GET",fullQuery);
-            connection.setDoInput(true);
-            checkResponseCode(connection, null);
-            return ConnectionManager.parseJson(connection).get("result").getAsBoolean();
-        } catch (IOException e) {
-            throw new NoResultException(e);
-        }};
-    }
-    //endregion
+	static Supplier<Boolean> checkPermissions(ConnectionManager cm, String query, Collection<OrePermission> perms, boolean anyEnough) {
+		return () -> {
+			try {
+				String fullQuery = "/permissions/" + (anyEnough ? "hasAny" : "hasAll") + "?" + query;
+				if (!query.isEmpty()) fullQuery += "&";
+				fullQuery += perms.stream().map(p -> "permissions=" + urlencoded(p.name().toLowerCase(Locale.ROOT))).collect(Collectors.joining("&"));
+				HttpsURLConnection connection = connect(cm, "GET", fullQuery);
+				connection.setDoInput(true);
+				checkResponseCode(connection, null);
+				return ConnectionManager.parseJson(connection).get("result").getAsBoolean();
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+	//endregion
 }

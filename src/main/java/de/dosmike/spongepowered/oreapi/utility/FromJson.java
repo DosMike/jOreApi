@@ -15,20 +15,20 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FromJson {
-    /**
-     * The json key to read from
-     */
-    String value();
+	/**
+	 * The json key to read from
+	 */
+	String value();
 
-    /**
-     * if this is marked optional, any absence of the key does not trigger exceptions.
-     * parse errors may still occur
-     */
-    boolean optional() default false;
+	/**
+	 * if this is marked optional, any absence of the key does not trigger exceptions.
+	 * parse errors may still occur
+	 */
+	boolean optional() default false;
 
-    /**
-     * is barely checked, will try to read the json as input type and assign as output type
-     */
-    Class<? extends TypeMapper<?,?>> mapper() default TypeMappers.IdentityMapper.class;
+	/**
+	 * is barely checked, will try to read the json as input type and assign as output type
+	 */
+	Class<? extends TypeMapper<?, ?>> mapper() default TypeMappers.IdentityMapper.class;
 
 }
