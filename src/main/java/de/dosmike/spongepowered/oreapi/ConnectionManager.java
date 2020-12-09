@@ -1,5 +1,6 @@
 package de.dosmike.spongepowered.oreapi;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.dosmike.spongepowered.oreapi.limiter.RateLimiter;
@@ -88,8 +89,14 @@ public class ConnectionManager {
 		return connection;
 	}
 
-	static JsonObject parseJson(HttpsURLConnection connection) throws IOException {
+	static JsonObject parseJsonObject(HttpsURLConnection connection) throws IOException {
 		JsonObject jobj = parser.parse(new InputStreamReader(connection.getInputStream())).getAsJsonObject();
+		if (verboseNetworkLogging) System.out.println("< " + jobj.toString());
+		return jobj;
+	}
+
+	static JsonArray parseJsonArray(HttpsURLConnection connection) throws IOException {
+		JsonArray jobj = parser.parse(new InputStreamReader(connection.getInputStream())).getAsJsonArray();
 		if (verboseNetworkLogging) System.out.println("< " + jobj.toString());
 		return jobj;
 	}
@@ -123,7 +130,7 @@ public class ConnectionManager {
 				tryPrintErrorBody(connection);
 				return false;
 			}
-			session = new OreSession(parseJson(connection));
+			session = new OreSession(parseJsonObject(connection));
 			return session.isAlive();
 		} catch (IOException e) {
 			e.printStackTrace();

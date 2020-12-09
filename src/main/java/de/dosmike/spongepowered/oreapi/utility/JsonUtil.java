@@ -17,6 +17,40 @@ import java.util.stream.Collectors;
 public class JsonUtil {
 
 	//region from json
+	public static <T> T[] fillArray(JsonArray source, Class<T> elementClass) {
+		T[] array = (T[]) Array.newInstance(elementClass, source.size());
+
+		try {
+			boolean defaultConstructor = true;
+			Constructor constructor = null;
+			try {
+				constructor = elementClass.getConstructor(JsonObject.class);
+				constructor.setAccessible(true);
+				defaultConstructor = false;
+			} catch (NoSuchMethodException e) {
+			}
+			constructor = elementClass.getConstructor();
+			if ((constructor.getModifiers() & Modifier.PRIVATE) == 0) {
+				throw new IllegalAccessException("Default constructor is private");
+			}
+
+			for (int i = 0; i < source.size(); i++) {
+				T element;
+				if (defaultConstructor) {
+					element = (T) constructor.newInstance();
+					fillSelf(element, source.get(i).getAsJsonObject());
+				} else {
+					element = (T) constructor.newInstance(source.get(i).getAsJsonObject());
+				}
+				Array.set(array, i, element);
+			}
+		} catch (IllegalAccessException | NoSuchMethodException | InstantiationException | InvocationTargetException e) {
+
+		}
+
+		return array;
+	}
+
 	public static void fillSelf(Object instance, JsonObject source) {
 		Class<?> clz = instance.getClass();
 		while (clz != Object.class) {
@@ -190,9 +224,7 @@ public class JsonUtil {
 			}
 		}
 	}
-	//endregion
 
-	//region to json
 	private static <T extends Object> T[] parseArray(JsonElement element, Function<JsonElement, T> elementParser, Class<T> tClass) {
 		if (!element.isJsonArray()) return (T[]) Array.newInstance(tClass, 0);
 		JsonArray array = element.getAsJsonArray();
@@ -201,6 +233,16 @@ public class JsonUtil {
 			instance[i] = elementParser.apply(array.get(i));
 		}
 		return instance;
+	}
+	//endregion
+
+	//region to json
+	public static <T> JsonArray buildArray(T[] array, String... tags) {
+		JsonArray target = new JsonArray();
+		for (int i = 0; i < array.length; i++) {
+			target.set(i, buildJson(array[i], tags));
+		}
+		return target;
 	}
 
 	/**

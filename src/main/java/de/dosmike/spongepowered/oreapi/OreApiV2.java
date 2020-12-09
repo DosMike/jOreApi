@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -120,6 +121,20 @@ public class OreApiV2 implements AutoCloseable {
 	}
 
 	/**
+	 * The API has no direct way of searching projects by pluginId
+	 * but the seach also returns matches for pluginId.
+	 * This means we have to sift through all search results and remove all
+	 * results that might accidentally match on name or keywords.
+	 *
+	 * @return the first matching OreProject if through all result pages, a project with matching project id was found.
+	 */
+	public CompletableFuture<OreProject> findProjectByPluginId(String pluginId) {
+		return cache().project(pluginId)
+				.map(CompletableFuture::completedFuture)
+				.orElseGet(() -> enqueue(NetTasks.findByPluginId(instance, pluginId)));
+	}
+
+	/**
 	 * @return empty if the connection failed or no such plugin exists
 	 */
 	public CompletableFuture<OreProject> getProject(OreNamespace namespace) {
@@ -162,17 +177,25 @@ public class OreApiV2 implements AutoCloseable {
 	}
 
 	/**
-	 * The API has no direct way of searching projects by pluginId
-	 * but the seach also returns matches for pluginId.
-	 * This means we have to sift through all search results and remove all
-	 * results that might accidentally match on name or keywords.
+	 * Retrieve the current list of members for this project with additional role information.
+	 * You will only see accepted roles unless you have {@link OrePermission#Manage_Subject_Members}
 	 *
-	 * @return the first matching OreProject if through all result pages, a project with matching project id was found.
+	 * @param project the project to fetch members for
 	 */
-	public CompletableFuture<OreProject> findProjectByPluginId(String pluginId) {
-		return cache().project(pluginId)
-				.map(CompletableFuture::completedFuture)
-				.orElseGet(() -> enqueue(NetTasks.findByPluginId(instance, pluginId)));
+	public CompletableFuture<OreMemberList> getProjectMembers(OreProjectReference project) {
+		return enqueue(NetTasks.getMembers(instance, project));
+	}
+
+	/**
+	 * Updates the member list for this project. Keep in mind that you have to send the whole list.
+	 * If you need to create the list, use {@link OreMemberList#forPosting()}
+	 * Keep in mind that a changed role is more like an invite and has to be accepted by the other party.
+	 *
+	 * @param project the project to edit
+	 * @param roles   a username -> role mapping
+	 */
+	public CompletableFuture<Void> setProjectMembers(OreProjectReference project, Map<String, OreRole> roles) {
+		return enqueue(NetTasks.setMembers(instance, project, roles));
 	}
 	//endregion
 	//region Version
