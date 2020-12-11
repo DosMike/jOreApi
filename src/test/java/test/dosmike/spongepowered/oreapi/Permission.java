@@ -47,13 +47,13 @@ public class Permission {
 	@Order(3)
 	public void violatePermission() {
 		assertFalse(api.hasAllPermissions(Collections.singleton(OrePermission.Create_Project)).join());
-		assertThrows(MissingPermissionException.class, () -> OreProject.builder()
+		assertThrows(MissingPermissionException.class, () -> api.createProject(OreProjectTemplate.builder()
 				.setName("Test Plugin")
 				.setCategory(OreCategory.Misc)
 				.setPluginId("testplugin197h5z86")
 				.setOwner("DosMike")
 				.setDescription("This plugin should not exist")
-				.build(api).join());
+				.build()).join());
 	}
 
 	@AfterAll

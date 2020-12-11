@@ -3,10 +3,7 @@ package de.dosmike.spongepowered.oreapi.utility;
 import com.google.gson.*;
 
 import java.lang.reflect.*;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -272,10 +269,13 @@ public class JsonUtil {
 			if (j == null) continue;
 			if (!tags.isEmpty()) {
 				JsonTags t = f.getAnnotation(JsonTags.class);
-				Set<String> putTags = Arrays.stream(t.value()).collect(Collectors.toSet());
+				Set<String> putTags;
+				if (t == null) putTags = new HashSet<>();
+				else putTags = Arrays.stream(t.value()).collect(Collectors.toSet());
 				if (!putTags.containsAll(tags)) continue;
 			}
 			try {
+				f.setAccessible(true);
 				Class<?> elementType = f.getType();
 				boolean asArray = false;
 				if (elementType.isArray()) {
@@ -364,10 +364,10 @@ public class JsonUtil {
 				}
 			} catch (IllegalAccessException e) {
 				String rem = "\nObject Type: " + instance.getClass().getSimpleName();
-				throw new RuntimeException("Could not fill field " + f.getName() + rem);
-			} catch (Throwable e) {
-				String rem = "\nObject Type: " + instance.getClass().getSimpleName();
 				throw new RuntimeException("Could not fill field " + f.getName() + rem, e);
+//			} catch (Throwable e) {
+//				String rem = "\nObject Type: " + instance.getClass().getSimpleName();
+//				throw new RuntimeException("Could not fill field " + f.getName() + rem, e);
 			}
 		}
 	}
@@ -385,7 +385,7 @@ public class JsonUtil {
 	}
 
 	private static JsonElement mangledEnum(Object e) {
-		return e == null ? JsonNull.INSTANCE : new JsonPrimitive(((Enum<?>) e).name());
+		return e == null ? JsonNull.INSTANCE : new JsonPrimitive(((Enum<?>) e).name().toLowerCase(Locale.ROOT));
 	}
 
 	private static JsonElement mangledObject(Object o) {
@@ -395,7 +395,8 @@ public class JsonUtil {
 	private static JsonArray mangledArray(Object arrayObject, Function<Object, JsonElement> elementMangler) {
 		JsonArray jar = new JsonArray();
 		for (int i = 0; i < Array.getLength(arrayObject); i++) {
-			jar.set(i, elementMangler.apply(Array.get(arrayObject, i)));
+			// we are iterating from the front, so adding is ok
+			jar.add(elementMangler.apply(Array.get(arrayObject, i)));
 		}
 		return jar;
 	}

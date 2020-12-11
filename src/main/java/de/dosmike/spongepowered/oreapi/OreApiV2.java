@@ -1,12 +1,12 @@
 package de.dosmike.spongepowered.oreapi;
 
-import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.netobject.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -45,7 +45,7 @@ public class OreApiV2 implements AutoCloseable {
 		}
 	}
 
-	ConnectionManager getConnectionManager() {
+	private ConnectionManager getConnectionManager() {
 		return instance;
 	}
 
@@ -144,15 +144,11 @@ public class OreApiV2 implements AutoCloseable {
 	}
 
 	/**
-	 * Use an OreProject.Builder builder instead of calling this manually.
-	 * It also provides nice setters.
-	 *
-	 * @param request request data
+	 * @param template request data
 	 * @return the task requesting the project to be created
 	 */
-	@Deprecated
-	public CompletableFuture<OreProject> createProject(JsonObject request) {
-		return enqueue(NetTasks.createProject(instance, request));
+	public CompletableFuture<OreProject> createProject(OreProjectTemplate template) {
+		return enqueue(NetTasks.createProject(instance, template));
 	}
 
 	/**
@@ -179,7 +175,7 @@ public class OreApiV2 implements AutoCloseable {
 	/**
 	 * Retrieve the current list of members for this project with additional role information.
 	 * You will only see accepted roles unless you have {@link OrePermission#Manage_Subject_Members}
-	 *
+	 * To update member roles call {@link OreMemberList#forPosting()} to get the mapping.
 	 * @param project the project to fetch members for
 	 */
 	public CompletableFuture<OreMemberList> getProjectMembers(OreProjectReference project) {
@@ -192,10 +188,21 @@ public class OreApiV2 implements AutoCloseable {
 	 * Keep in mind that a changed role is more like an invite and has to be accepted by the other party.
 	 *
 	 * @param project the project to edit
-	 * @param roles   a username -> role mapping
+	 * @param roles   a username -&gt; role mapping
 	 */
 	public CompletableFuture<Void> setProjectMembers(OreProjectReference project, Map<String, OreRole> roles) {
 		return enqueue(NetTasks.setMembers(instance, project, roles));
+	}
+
+	/**
+	 * Gets the day stats (views and downloads) for the project in the specified date range.
+	 *
+	 * @param project the project to query
+	 * @param from    the first day to query (inclusive)
+	 * @param to      the last day to query (inclusive)
+	 */
+	public CompletableFuture<Map<Date, OreProjectStatsDay>> getProjectStats(OreProjectReference project, Date from, Date to) {
+		return enqueue(NetTasks.getProjectStats(instance, project, from, to));
 	}
 	//endregion
 	//region Version

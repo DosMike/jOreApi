@@ -1,11 +1,13 @@
 package de.dosmike.spongepowered.oreapi;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.dosmike.spongepowered.oreapi.exception.MissingPermissionException;
 import de.dosmike.spongepowered.oreapi.exception.NoResultException;
 import de.dosmike.spongepowered.oreapi.netobject.*;
+import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import org.jetbrains.annotations.Nullable;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -13,16 +15,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static de.dosmike.spongepowered.oreapi.ConnectionManager.tryPrintErrorBody;
 import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendField;
-import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendMethod;
 
 /**
  * If {@link OreApiV2} is "party in the front" and {@link ConnectionManager} is "business in the back", then this is?
@@ -123,22 +123,9 @@ class NetTasks {
 	 * @param request request data
 	 * @return the task requesting the project to be created
 	 */
-	static Supplier<OreProject> createProject(ConnectionManager cm, JsonObject request) {
-		//validate request data
-		if (!request.has("name") || request.get("name").isJsonNull())
-			throw new IllegalStateException("name can't be null");
-		if (!request.has("plugin_id") || request.get("plugin_id").isJsonNull())
-			throw new IllegalStateException("pluginId can't be null");
-		if (!request.has("category") || request.get("category").isJsonNull())
-			throw new IllegalStateException("category can't be null");
-		if (!request.has("description") || request.get("description").isJsonNull())
-			throw new IllegalStateException("description can't be null");
-		if (!request.has("owner_name") || request.get("owner_name").isJsonNull())
-			throw new IllegalStateException("ownerName can't be null");
-		if (request.size() != 5)
-			throw new IllegalStateException("Invalid request object for CreateProject");
+	static Supplier<OreProject> createProject(ConnectionManager cm, OreProjectTemplate request) {
 		//prevent modification after validation until the task executes
-		final String requestBody = request.toString();
+		final String requestBody = JsonUtil.buildJson(request).toString();
 		return () -> {
 			try {
 				HttpsURLConnection connection = connect(cm, "POST", "/projects");
@@ -152,11 +139,11 @@ class NetTasks {
 		};
 	}
 
-	public static Supplier<OreProject> updateProject(ConnectionManager cm, OreProject project) {
+	static Supplier<OreProject> updateProject(ConnectionManager cm, OreProject project) {
 		//get shadow namespace
+		final OreNamespace ns = friendField(project, "shadowNamespace");
+		final String requestBody = JsonUtil.buildJson(project, "patchProject").toString();
 		return () -> {
-			OreNamespace ns = friendField(project, "shadowNamespace");
-			String requestBody = friendMethod(project, "getPatchJson").toString();
 			cm.cache.untrack(project);
 			try {
 				HttpsURLConnection connection = connect(cm, "PATCH", "/projects/" + ns.toURLEncode());
@@ -170,7 +157,7 @@ class NetTasks {
 		};
 	}
 
-	public static Supplier<Void> deleteProject(ConnectionManager cm, OreProjectReference project) {
+	static Supplier<Void> deleteProject(ConnectionManager cm, OreProjectReference project) {
 		return () -> {
 			try {
 				cm.cache.untrack(project);
@@ -184,7 +171,7 @@ class NetTasks {
 		};
 	}
 
-	public static Supplier<OreMemberList> getMembers(ConnectionManager cm, OreProjectReference project) {
+	static Supplier<OreMemberList> getMembers(ConnectionManager cm, OreProjectReference project) {
 		return () -> {
 			try {
 				//i'll just just bump the limit since this endpoint is not implementing proper pagination
@@ -199,7 +186,7 @@ class NetTasks {
 		};
 	}
 
-	public static Supplier<Void> setMembers(ConnectionManager cm, OreProjectReference project, Map<String, OreRole> roles) {
+	static Supplier<Void> setMembers(ConnectionManager cm, OreProjectReference project, Map<String, OreRole> roles) {
 		//build post body
 		JsonArray array = new JsonArray();
 		roles.entrySet().stream().map(e -> {
@@ -212,13 +199,37 @@ class NetTasks {
 
 		return () -> {
 			try {
-
 				HttpsURLConnection connection = connect(cm, "POST", "/projects/" + project.getNamespace().toURLEncode() + "/members");
 				connection.setDoInput(true);
 				ConnectionManager.postData(connection, requestBody);
 				checkResponseCode(connection, OrePermission.Manage_Subject_Members);
 				return null;
 			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	/**
+	 * The api docs say this endpoint requires is_subject_member, but the permission
+	 * is not listed in the NamedPermissions enum. don't know what's going on with that
+	 */
+	static Supplier<Map<Date, OreProjectStatsDay>> getProjectStats(ConnectionManager cm, OreProjectReference project, Date from, Date to) {
+		final SimpleDateFormat dateOnly = new SimpleDateFormat("yyyy-MM-dd");
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET",
+						"/projects/" + project.getNamespace().toURLEncode() +
+								"/stats?fromDate=" + urlencoded(dateOnly.format(from) + "&toDate=" + urlencoded(dateOnly.format(to))));
+				connection.setDoInput(true);
+				checkResponseCode(connection, null);
+				JsonObject container = ConnectionManager.parseJsonObject(connection);
+				Map<Date, OreProjectStatsDay> map = new HashMap<>();
+				for (Map.Entry<String, JsonElement> entry : container.entrySet()) {
+					map.put(dateOnly.parse(entry.getKey()), new OreProjectStatsDay(entry.getValue().getAsJsonObject()));
+				}
+				return map;
+			} catch (IOException | ParseException e) {
 				throw new NoResultException(e);
 			}
 		};
