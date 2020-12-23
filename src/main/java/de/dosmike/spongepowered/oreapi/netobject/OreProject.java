@@ -18,6 +18,14 @@ public class OreProject extends OreProjectReference implements Serializable {
 	 */
 	@ReflectiveUse
 	final OreNamespace shadowNamespace;
+	@ReflectiveUse
+	private int dirty = 0;
+	private static final int DIRT_ON_BASE = 1;
+	private static final int DIRT_ON_VISIBILITY = 2;
+	@ReflectiveUse
+	private final int settingsHash;
+	@ReflectiveUse
+	private String visibilityComment = null;
 
 	@FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
 	long createdAt;
@@ -50,6 +58,7 @@ public class OreProject extends OreProjectReference implements Serializable {
 	public OreProject(JsonObject object) {
 		JsonUtil.fillSelf(this, object);
 		shadowNamespace = new OreNamespace(namespace.owner, namespace.slug);
+		settingsHash = settings.hashCode();
 	}
 
 	//region getter
@@ -106,6 +115,7 @@ public class OreProject extends OreProjectReference implements Serializable {
 	 */
 	public void setName(String name) {
 		this.name = name;
+		this.dirty &= DIRT_ON_BASE;
 	}
 
 	/**
@@ -117,6 +127,7 @@ public class OreProject extends OreProjectReference implements Serializable {
 	 */
 	public void setCategory(OreCategory category) {
 		this.category = category;
+		this.dirty &= DIRT_ON_BASE;
 	}
 
 	/**
@@ -132,6 +143,25 @@ public class OreProject extends OreProjectReference implements Serializable {
 		if (summary.length() > 120)
 			throw new IllegalArgumentException("The summary is not allowed to exceed 120 characters");
 		this.summary = summary;
+		this.dirty &= DIRT_ON_BASE;
+	}
+
+	/**
+	 * The required permissions vary depending on the wanted visibility. Having reviewer permission
+	 * guarantees access to all visibilities no matter the circumstances. IN all other cases these rules apply.
+	 * <ul>
+	 * <li>{@link OreVisibility#NeedsApproval} requires {@link OrePermission#Edit_Subject_Settings} and
+	 * that the current visibility is {@link OreVisibility#NeedsChanges}</li>
+	 * <li>{@link OreVisibility#SoftDelete} requires {@link OrePermission#Delete_Project}</li>
+	 * </ul>
+	 *
+	 * @param visibility this will be the new visibility for this project
+	 * @param comment    The api allows you to specify a reason for why you changed the visibility
+	 */
+	public void setVisibility(OreVisibility visibility, String comment) {
+		this.visibility = visibility;
+		this.visibilityComment = comment == null ? "" : comment;
+		this.dirty &= DIRT_ON_VISIBILITY;
 	}
 	//endregion
 

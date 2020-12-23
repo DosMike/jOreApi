@@ -142,7 +142,7 @@ class NetTasks {
 	}
 
 	static Supplier<OreProject> updateProject(ConnectionManager cm, OreProject project) {
-		//get shadow namespace
+		//get hidden values
 		final OreNamespace ns = friendField(project, "shadowNamespace");
 		final String requestBody = JsonUtil.buildJson(project, "patchProject").toString();
 		return () -> {
@@ -153,6 +153,25 @@ class NetTasks {
 				ConnectionManager.postData(connection, requestBody);
 				checkResponseCode(connection, OrePermission.Edit_Subject_Settings);
 				return cm.getCache().cacheProject(new OreProject(ConnectionManager.parseJsonObject(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	static Supplier<OreProject> updateProjectVisibility(ConnectionManager cm, OreProject project, String visibilityBody) {
+		//get hidden values
+		final int dirt = friendField(project, "dirty");
+
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "POST", "/projects/" + project.getNamespace().toURLEncode() + "/visibility");
+//				connection.setDoInput(true);
+				ConnectionManager.postData(connection, visibilityBody);
+				checkResponseCode(connection, null);
+
+				friendField(project, "dirty", dirt & ~2);
+				return project;
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}

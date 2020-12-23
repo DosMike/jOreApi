@@ -1,5 +1,7 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
+import java.util.Locale;
+
 public enum OreVisibility {
 
 	Public, New, NeedsChanges, NeedsApproval, SoftDelete;
@@ -12,5 +14,11 @@ public enum OreVisibility {
 		throw new IllegalArgumentException("No such OreStability " + string);
 	}
 
+	/**
+	 * returns the original (remote) enum value
+	 */
+	public String toString() {
+		return name().substring(0, 1).toLowerCase(Locale.ROOT) + name().substring(1);
+	}
 
 }

@@ -178,4 +178,36 @@ public class OreProjectSettings implements Serializable {
 		this.forumSync = forumSync;
 	}
 	//endregion
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		OreProjectSettings that = (OreProjectSettings) o;
+
+		if (forumSync != that.forumSync) return false;
+		// Probably incorrect - comparing Object[] arrays with Arrays.equals
+		if (!Arrays.equals(keywords, that.keywords)) return false;
+		if (homepageUrl != null ? !homepageUrl.equals(that.homepageUrl) : that.homepageUrl != null) return false;
+		if (issuesUrl != null ? !issuesUrl.equals(that.issuesUrl) : that.issuesUrl != null) return false;
+		if (sourcesUrl != null ? !sourcesUrl.equals(that.sourcesUrl) : that.sourcesUrl != null) return false;
+		if (supportUrl != null ? !supportUrl.equals(that.supportUrl) : that.supportUrl != null) return false;
+		if (licenseName != null ? !licenseName.equals(that.licenseName) : that.licenseName != null) return false;
+		return licenseUrl != null ? licenseUrl.equals(that.licenseUrl) : that.licenseUrl == null;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Arrays.hashCode(keywords);
+		result = 31 * result + (homepageUrl != null ? homepageUrl.hashCode() : 0);
+		result = 31 * result + (issuesUrl != null ? issuesUrl.hashCode() : 0);
+		result = 31 * result + (sourcesUrl != null ? sourcesUrl.hashCode() : 0);
+		result = 31 * result + (supportUrl != null ? supportUrl.hashCode() : 0);
+		result = 31 * result + (licenseName != null ? licenseName.hashCode() : 0);
+		result = 31 * result + (licenseUrl != null ? licenseUrl.hashCode() : 0);
+		result = 31 * result + (forumSync ? 1 : 0);
+		return result;
+	}
 }

@@ -50,6 +50,16 @@ public class ReflectionHelper {
 		}
 	}
 
+	public static <T> void friendField(Object instance, String name, T value) {
+		try {
+			Field f = instance.getClass().getDeclaredField(name);
+			f.setAccessible(true);
+			f.set(instance, value);
+		} catch (Throwable t) {
+			throw new RuntimeException(t);
+		}
+	}
+
 	public static <T> T friendMethod(Object instance, String name) {
 		try {
 			Method m = instance.getClass().getDeclaredMethod(name);
