@@ -177,19 +177,27 @@ class NetTasks {
 		};
 	}
 
-	static Supplier<OreProject> updateProjectVisibility(ConnectionManager cm, OreProject project, String visibilityBody) {
-		//get hidden values
-		final int dirt = friendField(project, "dirty");
+	static <T extends OreProjectReference> Supplier<T> updateProjectVisibility(ConnectionManager cm, T project, OreVisibility visibility, String comment) {
+		JsonObject requestJson = new JsonObject();
+		requestJson.addProperty("visibility", visibility.toString());
+		requestJson.addProperty("comment", comment != null ? comment : "");
+		final String update = requestJson.toString();
 
 		return () -> {
 			try {
 				HttpsURLConnection connection = connect(cm, "POST", "/projects/" + project.getNamespace().toURLEncode() + "/visibility");
 //				connection.setDoInput(true);
-				ConnectionManager.postData(connection, visibilityBody);
+				ConnectionManager.postData(connection, update);
 				checkResponseCode(connection, null);
 
-				friendField(project, "dirty", dirt & ~2);
-				return project;
+				//try to update and return the cached reference, if possible
+				Optional<OreProject> cacheproject = cm.getCache().project(project);
+				cacheproject.ifPresent(p -> friendField(p, "visibility", visibility));
+				if (project instanceof OreProject) {
+					return (T) cacheproject.orElse((OreProject) project);
+				} else {
+					return (T) project;
+				}
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}

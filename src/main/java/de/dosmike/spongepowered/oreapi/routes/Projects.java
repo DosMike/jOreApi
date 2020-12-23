@@ -1,14 +1,11 @@
 package de.dosmike.spongepowered.oreapi.routes;
 
-import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.netobject.*;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
-import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendField;
 
 public class Projects extends AbstractRoute {
 
@@ -61,45 +58,12 @@ public class Projects extends AbstractRoute {
      * If you changed parts of the namespace (owner, project name) all existing instances will be
      * invalid and requests involving those will most likely fail. Use the result of this method
      * instead.
-     * Updating the visibility of a project is done with a separate request. Some effort is made
-     * to dynamically call only the required endpoints on the remote so you only have to edit
-     * the project instance as desired before calling this.
-     * Request order is PATCH /project, POST /project//visibility
      *
      * @param project the project you want to update on ore
      * @return a completable future that will return the updated instance from remote.
      */
     public CompletableFuture<OreProject> update(OreProject project) {
-        //get hidden values
-        final int dirt = friendField(project, "dirty");
-        //did a direct member or a settings value change?
-        boolean updateBase = ((dirt & 1) != 0) || (int) friendField(project, "settingsHash") != project.getSettings().hashCode();
-        boolean updateVisibility = ((dirt & 2) != 0);
-
-        //prepare for project update - because project will be replaced if updateBase, i cache everything else ahead
-        String visibilityUpdate;
-        if (updateVisibility) {
-            JsonObject requestJson = new JsonObject();
-            requestJson.addProperty("visibility", project.getVisibility().toString());
-            String comment = friendField(project, "visibilityComment");
-            requestJson.addProperty("comment", comment != null ? comment : "");
-            visibilityUpdate = requestJson.toString();
-        } else {
-            visibilityUpdate = null;
-        }
-
-        CompletableFuture<OreProject> transformed = null;
-        if (updateBase) transformed = enqueue(NetTasks.updateProject(cm(), project));
-        if (updateVisibility) {
-            if (transformed == null)
-                transformed = enqueue(NetTasks.updateProjectVisibility(cm(), project, visibilityUpdate));
-            else {
-                transformed.thenCompose(op -> enqueue(NetTasks.updateProjectVisibility(cm(), op, visibilityUpdate)));
-            }
-        }
-        if (transformed == null) transformed = CompletableFuture.completedFuture(project);//nothing to update
-
-        return transformed;
+        return enqueue(NetTasks.updateProject(cm(), project));
     }
 
     /**
@@ -129,6 +93,22 @@ public class Projects extends AbstractRoute {
      */
     public CompletableFuture<Map<Date, OreProjectStatsDay>> stats(OreProjectReference project, Date from, Date to) {
         return enqueue(NetTasks.getProjectStats(cm(), project, from, to));
+    }
+
+    /**
+     * The required permissions vary depending on the wanted visibility. Having reviewer permission
+     * guarantees access to all visibilities no matter the circumstances. IN all other cases these rules apply.
+     * <ul>
+     * <li>{@link OreVisibility#NeedsApproval} requires {@link OrePermission#Edit_Subject_Settings} and
+     * that the current visibility is {@link OreVisibility#NeedsChanges}</li>
+     * <li>{@link OreVisibility#SoftDelete} requires {@link OrePermission#Delete_Project}</li>
+     * </ul>
+     *
+     * @param visibility this will be the new visibility for this project
+     * @param comment    The api allows you to specify a reason for why you changed the visibility
+     */
+    public <T extends OreProjectReference> CompletableFuture<T> visibility(T project, OreVisibility visibility, String comment) {
+        return enqueue(NetTasks.updateProjectVisibility(cm(), project, visibility, comment));
     }
 
     /**
