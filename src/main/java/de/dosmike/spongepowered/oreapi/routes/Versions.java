@@ -74,8 +74,12 @@ public class Versions extends AbstractRoute {
     }
 
     /**
+     * If you want to save changes in the repository, you'll have to update it through this method.
      * Update a version. Please note that everything you can edit on a version is a limited set
-     * of data withing the tags, namely stability and platforms
+     * of data withing the tags, namely stability, release type and platforms
+     *
+     * @param version the version you want to update on the backend
+     * @return the newly cached instance for this version
      */
     public CompletableFuture<OreVersion> update(OreVersion version) {
         if (!version.getProjectRef().equals(project))
