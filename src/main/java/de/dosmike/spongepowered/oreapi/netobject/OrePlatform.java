@@ -29,6 +29,14 @@ public class OrePlatform implements Serializable {
 		JsonUtil.fillSelf(this, object);
 	}
 
+	/**
+	 * Creates a "SimplePlatform" that can be used to update a version
+	 */
+	public OrePlatform(String platform, String platformVersion) {
+		this.platform = platform;
+		this.platformVersion = platformVersion;
+	}
+
 	public String getName() {
 		return platform;
 	}

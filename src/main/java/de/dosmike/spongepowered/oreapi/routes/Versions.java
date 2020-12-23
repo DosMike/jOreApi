@@ -73,6 +73,10 @@ public class Versions extends AbstractRoute {
         return enqueue(NetTasks.createVersion(cm(), project, deployVersionInfo, file));
     }
 
+    /**
+     * Update a version. Please note that everything you can edit on a version is a limited set
+     * of data withing the tags, namely stability and platforms
+     */
     public CompletableFuture<OreVersion> update(OreVersion version) {
         if (!version.getProjectRef().equals(project))
             throw new IllegalArgumentException("The supplied version does not relate to the referenced project");

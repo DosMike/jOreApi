@@ -33,11 +33,32 @@ public class OreVersionTags implements Serializable {
 		return stability;
 	}
 
+	public void setStability(OreStability stability) {
+		this.stability = stability;
+	}
+
 	public OreReleaseType getReleaseType() {
 		return releaseType;
+	}
+
+	public void setReleaseType(OreReleaseType releaseType) {
+		this.releaseType = releaseType;
 	}
 
 	public OrePlatform[] getPlatforms() {
 		return platforms;
 	}
+
+	public void setPlatforms(OrePlatform[] platforms) {
+		this.platforms = platforms;
+	}
+
+	public OrePlatform getPlatform(int index) {
+		return platforms[index];
+	}
+
+	public void setPlatform(int index, OrePlatform platform) {
+		this.platforms[index] = platform;
+	}
+
 }
