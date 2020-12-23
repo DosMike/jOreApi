@@ -1,9 +1,11 @@
-package de.dosmike.spongepowered.oreapi;
+package de.dosmike.spongepowered.oreapi.routes;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.dosmike.spongepowered.oreapi.ConnectionManager;
+import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.exception.MissingPermissionException;
 import de.dosmike.spongepowered.oreapi.exception.NoResultException;
 import de.dosmike.spongepowered.oreapi.netobject.*;
@@ -52,8 +54,8 @@ class NetTasks {
 
 	private static HttpsURLConnection connect(ConnectionManager connection, String method, String queryURI) throws IOException {
 		auth(connection);
-		ConnectionManager.limiter.takeRequest();
-		return connection.session.authenticate(connection.createConnection(method, queryURI));
+		ConnectionManager.takeRequest();
+		return connection.getSession().authenticate(connection.createConnection(method, queryURI));
 	}
 
 	private static void checkResponseCode(HttpsURLConnection connection, OrePermission endPointPermission) throws IOException {
@@ -78,7 +80,7 @@ class NetTasks {
 				checkResponseCode(connection, OrePermission.View_Public_Info);
 				OreProjectList resultList = new OreProjectList(ConnectionManager.parseJsonObject(connection), OreProject.class, filter);
 				for (OreProject p : resultList.getResult())
-					cm.cache.cacheProject(p);
+					cm.getCache().cacheProject(p);
 				return resultList;
 			} catch (IOException e) {
 				throw new NoResultException(e);
@@ -92,7 +94,7 @@ class NetTasks {
 				HttpsURLConnection connection = connect(cm, "GET", "/projects/" + namespace.toURLEncode());
 				connection.setDoInput(true);
 				checkResponseCode(connection, OrePermission.View_Public_Info);
-				return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJsonObject(connection)));
+				return cm.getCache().cacheProject(new OreProject(ConnectionManager.parseJsonObject(connection)));
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}
@@ -132,7 +134,7 @@ class NetTasks {
 				connection.setDoInput(true);
 				ConnectionManager.postData(connection, requestBody);
 				checkResponseCode(connection, OrePermission.Create_Project);
-				return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJsonObject(connection)));
+				return cm.getCache().cacheProject(new OreProject(ConnectionManager.parseJsonObject(connection)));
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}
@@ -144,13 +146,13 @@ class NetTasks {
 		final OreNamespace ns = friendField(project, "shadowNamespace");
 		final String requestBody = JsonUtil.buildJson(project, "patchProject").toString();
 		return () -> {
-			cm.cache.untrack(project);
+			cm.getCache().untrack(project);
 			try {
 				HttpsURLConnection connection = connect(cm, "PATCH", "/projects/" + ns.toURLEncode());
 				connection.setDoInput(true);
 				ConnectionManager.postData(connection, requestBody);
 				checkResponseCode(connection, OrePermission.Edit_Subject_Settings);
-				return cm.cache.cacheProject(new OreProject(ConnectionManager.parseJsonObject(connection)));
+				return cm.getCache().cacheProject(new OreProject(ConnectionManager.parseJsonObject(connection)));
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}
@@ -160,7 +162,7 @@ class NetTasks {
 	static Supplier<Void> deleteProject(ConnectionManager cm, OreProjectReference project) {
 		return () -> {
 			try {
-				cm.cache.untrack(project);
+				cm.getCache().untrack(project);
 				HttpsURLConnection connection = connect(cm, "DELETE", "/projects/" + project.getNamespace().toURLEncode());
 				connection.setDoInput(true);
 				checkResponseCode(connection, OrePermission.Hard_Delete_Project);
@@ -249,7 +251,7 @@ class NetTasks {
 				checkResponseCode(connection, OrePermission.View_Public_Info);
 				OreVersionList resultList = new OreVersionList(ConnectionManager.parseJsonObject(connection), project, OreVersion.class, pagination);
 				for (OreVersion v : resultList.getResult())
-					cm.cache.cacheVersion(project.getPluginId().toLowerCase(), v);
+					cm.getCache().cacheVersion(project.getPluginId().toLowerCase(), v);
 				return resultList;
 			} catch (IOException e) {
 				throw new NoResultException(e);
@@ -263,7 +265,7 @@ class NetTasks {
 				HttpsURLConnection connection = connect(cm, "GET", "/projects/" + project.getNamespace().toURLEncode() + "/versions/" + URLEncoder.encode(versionName, "UTF-8"));
 				connection.setDoInput(true);
 				checkResponseCode(connection, OrePermission.View_Public_Info);
-				return cm.cache.cacheVersion(project.getPluginId(), new OreVersion(project.toReference(), ConnectionManager.parseJsonObject(connection)));
+				return cm.getCache().cacheVersion(project.getPluginId(), new OreVersion(project.toReference(), ConnectionManager.parseJsonObject(connection)));
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}
@@ -303,9 +305,9 @@ class NetTasks {
 						version.getProjectRef().getNamespace().toURLEncode() + "/versions/" +
 						version.getURLSafeName() + "/confirm?api=true");
 
-				HttpsURLConnection connection = cm.session.authenticate((HttpsURLConnection) requestUrl.openConnection());
+				HttpsURLConnection connection = cm.getSession().authenticate((HttpsURLConnection) requestUrl.openConnection());
 				connection.setInstanceFollowRedirects(true);
-				connection.setRequestProperty("User-Agent", cm.application);
+				connection.setRequestProperty("User-Agent", cm.getUserAgent());
 				connection.setRequestProperty("Content-Type", "application/json");
 				connection.setRequestMethod("GET");
 				connection.setDoInput(true);

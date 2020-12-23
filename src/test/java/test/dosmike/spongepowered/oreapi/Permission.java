@@ -4,6 +4,7 @@ import de.dosmike.spongepowered.oreapi.ConnectionManager;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.exception.MissingPermissionException;
 import de.dosmike.spongepowered.oreapi.netobject.*;
+import de.dosmike.spongepowered.oreapi.routes.Permissions;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Field;
@@ -30,24 +31,25 @@ public class Permission {
 	@Order(1)
 	public void viewPublicInfo() {
 		//this permission should be granted on all public session endpoins
-		OrePermissionGrant granted = api.getPermissions().join();
+		OrePermissionGrant granted = api.permissions().get().join();
 		System.out.println("Has Perms: " + granted.stream().map(Enum::name).collect(Collectors.joining(", ")));
 		granted.assertAllPermissions(OrePermission.View_Public_Info);
-		api.getPermissions(new OreNamespace("DosMike", "villagershops")).join().assertAllPermissions(OrePermission.View_Public_Info);
+		api.projects().permissions(new OreNamespace("DosMike", "villagershops")).get().join().assertAllPermissions(OrePermission.View_Public_Info);
 	}
 
 	@Test
 	@Order(2)
 	public void askHasPermission() {
-		assertTrue(api.hasAllPermissions(new OreNamespace("DosMike", "villagershops"), Collections.singleton(OrePermission.View_Public_Info)).join());
-		assertFalse(api.hasAllPermissions(new OreNamespace("DosMike", "villagershops"), Collections.singleton(OrePermission.Delete_Project)).join());
+		Permissions nsperm = api.projects().permissions(new OreNamespace("DosMike", "villagershops"));
+		assertTrue(nsperm.hasAll(Collections.singleton(OrePermission.View_Public_Info)).join());
+		assertFalse(nsperm.hasAll(Collections.singleton(OrePermission.Delete_Project)).join());
 	}
 
 	@Test
 	@Order(3)
 	public void violatePermission() {
-		assertFalse(api.hasAllPermissions(Collections.singleton(OrePermission.Create_Project)).join());
-		assertThrows(MissingPermissionException.class, () -> api.createProject(OreProjectTemplate.builder()
+		assertFalse(api.permissions().hasAll(Collections.singleton(OrePermission.Create_Project)).join());
+		assertThrows(MissingPermissionException.class, () -> api.projects().create(OreProjectTemplate.builder()
 				.setName("Test Plugin")
 				.setCategory(OreCategory.Misc)
 				.setPluginId("testplugin197h5z86")

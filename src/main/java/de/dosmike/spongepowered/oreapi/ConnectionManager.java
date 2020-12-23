@@ -12,6 +12,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 /**
  * This is the "business in the back" class of {@link OreApiV2}. This class does the basic work nobody else wants to do.
@@ -19,10 +21,10 @@ import java.util.List;
  * Please do me a favour and call {@link #terminate} when you're exiting, this class hosts a static thread that needs to
  * go at some point.<br>
  * <ul><li>{@link OreApiV2} Presents a nice interface with only the necessary methods. It utilizes the cache and, if
- * necessary calls into {@link NetTasks} for live data.</li>
- * <li>{@link NetTasks} Is the actual API implementation. Providing suppliers that can be scheduled in the Limiter held
- * by the {@link ConnectionManager}</li>
- * <li>{@link ConnectionManager} holds all the local API data including cache and session. It contains all sorts of
+ * necessary calls into NetTasks for live data.</li>
+ * <li>NetTasks Is the actual API implementation. Providing suppliers that can be scheduled in the Limiter held
+ * by the ConnectionManager</li>
+ * <li>ConnectionManager holds all the local API data including cache and session. It contains all sorts of
  * utility from building connection objects to destroying sessions</li></ul>
  */
 public class ConnectionManager {
@@ -54,6 +56,10 @@ public class ConnectionManager {
 		cache = new ObjectCache();
 	}
 
+	public String getUserAgent() {
+		return application;
+	}
+
 	/**
 	 * Don't call this unless all connections are complete.
 	 * This function will terminate the limiter, effectively preventing further calls through {@link OreApiV2}
@@ -67,6 +73,14 @@ public class ConnectionManager {
 	static void notifyClosed(OreApiV2 instance) {
 		if (!instances.remove(instance))
 			throw new IllegalStateException("This instance was already closed!");
+	}
+
+	public static <T> CompletableFuture<T> enqueue(Supplier<T> task) {
+		return limiter.enqueue(task);
+	}
+
+	public static void takeRequest() {
+		limiter.takeRequest();
 	}
 
 	public void withApiKey(String apiKey) {
@@ -89,19 +103,19 @@ public class ConnectionManager {
 		return connection;
 	}
 
-	static JsonObject parseJsonObject(HttpsURLConnection connection) throws IOException {
+	public static JsonObject parseJsonObject(HttpsURLConnection connection) throws IOException {
 		JsonObject jobj = parser.parse(new InputStreamReader(connection.getInputStream())).getAsJsonObject();
 		if (verboseNetworkLogging) System.out.println("< " + jobj.toString());
 		return jobj;
 	}
 
-	static JsonArray parseJsonArray(HttpsURLConnection connection) throws IOException {
+	public static JsonArray parseJsonArray(HttpsURLConnection connection) throws IOException {
 		JsonArray jobj = parser.parse(new InputStreamReader(connection.getInputStream())).getAsJsonArray();
 		if (verboseNetworkLogging) System.out.println("< " + jobj.toString());
 		return jobj;
 	}
 
-	static HttpsURLConnection postData(HttpsURLConnection connection, String rawBody) throws IOException {
+	public static HttpsURLConnection postData(HttpsURLConnection connection, String rawBody) throws IOException {
 		if (verboseNetworkLogging) System.out.println("> " + rawBody);
 		connection.setDoOutput(true);
 		try (BufferedWriter w = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()))) {

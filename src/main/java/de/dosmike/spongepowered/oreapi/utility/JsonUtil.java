@@ -283,6 +283,9 @@ public class JsonUtil {
 					elementType = elementType.getComponentType();
 				}
 
+				Object raw = f.get(instance);
+				if (j.optional() && raw == null) continue;
+
 				TypeMapper<Object, Object> mapper = null;
 				if (!TypeMappers.IdentityMapper.class.isAssignableFrom(j.mapper())) try {
 					//construct mapper
@@ -329,8 +332,6 @@ public class JsonUtil {
 					else
 						mingle = JsonUtil::mangledObject;
 				}
-
-				Object raw = f.get(instance);
 
 				//prepare native
 				Object mapOut;

@@ -4,6 +4,7 @@ import de.dosmike.spongepowered.oreapi.ConnectionManager;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.netobject.OreNamespace;
 import de.dosmike.spongepowered.oreapi.netobject.OreVersionList;
+import de.dosmike.spongepowered.oreapi.routes.Versions;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Field;
@@ -31,14 +32,14 @@ public class PublicVersions {
 	@Test
 	@Order(1)
 	public void listVersions() {
-		versions = api.getProject(ns).thenCompose(p -> api.listVersions(p, null)).join();
+		versions = api.projects().get(ns).thenCompose(p -> api.projects().versions(p).list(null)).join();
 		assertFalse(versions.getResult().isEmpty());
 	}
 
 	@Test
 	@Order(2)
 	public void getChangelog() {
-		String changeLog = api.getVersionChangelog(versions.getResult().get(0)).join();
+		String changeLog = versions.getResult().get(0).with(api, Versions::changelog).join();
 		assertFalse(changeLog.isEmpty());
 		assertTrue(versions.getResult().get(0).getChangelog().isPresent());
 	}
@@ -46,7 +47,7 @@ public class PublicVersions {
 	@Test
 	@Order(3)
 	public void getVersionDownload() {
-		System.out.println(api.getDownloadURL(versions.getResult().get(0)).join());
+		System.out.println(versions.getResult().get(0).with(api, Versions::getDownloadURL).join());
 	}
 
 	@AfterAll

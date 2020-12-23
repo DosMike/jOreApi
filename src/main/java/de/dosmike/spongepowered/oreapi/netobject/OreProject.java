@@ -102,7 +102,6 @@ public class OreProject extends OreProjectReference implements Serializable {
 	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
 	 *
 	 * @param name the new name for this project
-	 * @see OreApiV2#updateProject
 	 * @see OreProject#update
 	 */
 	public void setName(String name) {
@@ -114,7 +113,6 @@ public class OreProject extends OreProjectReference implements Serializable {
 	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
 	 *
 	 * @param category the new name for this project
-	 * @see OreApiV2#updateProject
 	 * @see OreProject#update
 	 */
 	public void setCategory(OreCategory category) {
@@ -128,7 +126,6 @@ public class OreProject extends OreProjectReference implements Serializable {
 	 *
 	 * @param summary the new name for this project
 	 * @throws IllegalArgumentException if the summary exceeds the limit of 120 characters.
-	 * @see OreApiV2#updateProject
 	 * @see OreProject#update
 	 */
 	public void setSummary(String summary) {
@@ -149,7 +146,7 @@ public class OreProject extends OreProjectReference implements Serializable {
 	 * @return a completable future that will return the updated instance from remote.
 	 */
 	public CompletableFuture<OreProject> update(OreApiV2 api) {
-		return api.updateProject(this);
+		return api.projects().update(this);
 	}
 
 }

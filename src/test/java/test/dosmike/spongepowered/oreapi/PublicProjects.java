@@ -30,7 +30,7 @@ public class PublicProjects {
 	public void search() {
 		System.out.println("Using search term 'cubeengine'");
 		OreProjectFilter search = new OreProjectFilter("cubeengine");
-		OreProjectList result = api.projectSearch(search).join();
+		OreProjectList result = api.projects().search(search).join();
 		result.getResult().forEach(p -> System.out.println(p.getName() + ": " + p.getPluginId() + " @ " + p.getNamespace().toString()));
 		assertTrue(result.getResult().stream().anyMatch(p -> p.getPluginId().equals("cubeengine-chat")), "Search does not contain most relevant");
 	}
@@ -39,14 +39,14 @@ public class PublicProjects {
 	@Order(2)
 	public void findPluginById() {
 		System.out.println("Finding plugin 'vshop'");
-		System.out.println(api.findProjectByPluginId("vshop").join().getName());
+		System.out.println(api.projects().findById("vshop").join().getName());
 	}
 
 	@Test
 	@Order(3)
 	public void getByNamespace() {
 		OreNamespace ns = new OreNamespace("DosMike", "villagershops");
-		System.out.println(api.getProject(ns).join().getName());
+		System.out.println(api.projects().get(ns).join().getName());
 	}
 
 	@AfterAll

@@ -1,6 +1,8 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
+import de.dosmike.spongepowered.oreapi.OreApiV2;
+import de.dosmike.spongepowered.oreapi.routes.Versions;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
@@ -8,6 +10,7 @@ import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 public class OreVersion implements Serializable {
 
@@ -46,6 +49,10 @@ public class OreVersion implements Serializable {
 
 	public OreProjectReference getProjectRef() {
 		return project;
+	}
+
+	public <T> T with(OreApiV2 api, BiFunction<Versions, OreVersion, T> function) {
+		return function.apply(api.projects().versions(project), this);
 	}
 
 	public long getCreatedAt() {
@@ -102,5 +109,10 @@ public class OreVersion implements Serializable {
 
 	public Optional<String> getChangelog() {
 		return Optional.ofNullable(changelog);
+	}
+
+	@Override
+	public String toString() {
+		return name + "@" + getProjectRef().toString();
 	}
 }

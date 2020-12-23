@@ -13,6 +13,9 @@ import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendFie
 
 public class ObjectCache {
 
+	ObjectCache() {
+	}
+
 	private final CachingCollection<OreProject> oreProjectCache = new CachingCollection<>(5, TimeUnit.MINUTES);
 
 	public OreProject cacheProject(OreProject project) {
