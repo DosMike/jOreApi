@@ -2,6 +2,7 @@ package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
+import de.dosmike.spongepowered.oreapi.utility.JsonTags;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 
 import java.io.Serializable;
@@ -14,8 +15,10 @@ import java.io.Serializable;
 public class OrePlatform implements Serializable {
 
 	@FromJson("platform")
+	@JsonTags("patchVersion")
 	String platform;
 	@FromJson(value = "platform_version", optional = true)
+	@JsonTags("patchVersion")
 	String platformVersion;
 	@FromJson(value = "display_platform_version", optional = true)
 	String displayPlatformVersion;

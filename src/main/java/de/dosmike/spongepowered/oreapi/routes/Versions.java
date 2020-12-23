@@ -73,6 +73,12 @@ public class Versions extends AbstractRoute {
         return enqueue(NetTasks.createVersion(cm(), project, deployVersionInfo, file));
     }
 
+    public CompletableFuture<OreVersion> update(OreVersion version) {
+        if (!version.getProjectRef().equals(project))
+            throw new IllegalArgumentException("The supplied version does not relate to the referenced project");
+        return enqueue(NetTasks.updateVersion(cm(), version));
+    }
+
     /**
      * If the version is not marked as Reviewed with {@link OreVersion#getReviewState()}
      * you should prompt the user with a disclaimer, that installing such plugins might be

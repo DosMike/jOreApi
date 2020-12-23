@@ -26,8 +26,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static de.dosmike.spongepowered.oreapi.ConnectionManager.parseJsonObject;
-import static de.dosmike.spongepowered.oreapi.ConnectionManager.tryPrintErrorBody;
+import static de.dosmike.spongepowered.oreapi.ConnectionManager.*;
 import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendField;
 
 /**
@@ -363,6 +362,20 @@ class NetTasks {
 				mpfd.write(connection);
 				checkResponseCode(connection, OrePermission.Create_Version);
 				return new OreVersion(project, parseJsonObject(connection));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	static Supplier<OreVersion> updateVersion(ConnectionManager cm, OreVersion version) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "PATCH", "/projects/" + version.getProjectRef().getNamespace().toURLEncode() + "/versions");
+				connection.setDoInput(true);
+				postData(connection, JsonUtil.buildJson(version.getTags(), "patchVersion").toString());
+				checkResponseCode(connection, OrePermission.Edit_Version);
+				return cm.getCache().cacheVersion(version.getProjectRef().getPluginId(), new OreVersion(version.getProjectRef(), parseJsonObject(connection)));
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}
