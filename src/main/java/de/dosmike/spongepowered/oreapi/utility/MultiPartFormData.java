@@ -82,12 +82,12 @@ public class MultiPartFormData {
         }
     }
 
-    public MultiPartFormData addStringable(@NotNull String key, @NotNull Object value) {
+    public MultiPartFormData addProperty(@NotNull String key, @NotNull Object value) {
         entries.put(key, new StringableEntry(value));
         return this;
     }
 
-    public MultiPartFormData addUpload(@NotNull String key, @NotNull Path filePath) {
+    public MultiPartFormData addAsset(@NotNull String key, @NotNull Path filePath) {
         entries.put(key, new UploadEntry(filePath));
         return this;
     }

@@ -1,13 +1,11 @@
 package de.dosmike.spongepowered.oreapi.routes;
 
 import de.dosmike.spongepowered.oreapi.OreApiV2;
-import de.dosmike.spongepowered.oreapi.netobject.OrePaginationFilter;
-import de.dosmike.spongepowered.oreapi.netobject.OreProjectReference;
-import de.dosmike.spongepowered.oreapi.netobject.OreVersion;
-import de.dosmike.spongepowered.oreapi.netobject.OreVersionList;
+import de.dosmike.spongepowered.oreapi.netobject.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 public class Versions extends AbstractRoute {
@@ -51,6 +49,29 @@ public class Versions extends AbstractRoute {
                         .orElseGet(() -> enqueue(NetTasks.getVerionChangelog(cm(), v))));
     }
 
+    /**
+     * Scan a plugin file for future upload. Use this before uploading a version to see which tags Ore will
+     * assign the file. Requires the {@link OrePermission#Create_Version} in the project or owning organization.<br>
+     * Please note that the resulting version is not cached for obvious reason.
+     *
+     * @param file the file to scan
+     * @return a OreVersion for inspection
+     */
+    public CompletableFuture<OreVersion> scan(Path file) {
+        return enqueue(NetTasks.scanVersion(cm(), project, file));
+    }
+
+    /**
+     * Creates a new version for a project. Requires the {@link OrePermission#Create_Version} in the
+     * project or owning organization.
+     *
+     * @param deployVersionInfo further information regarding this new version
+     * @param file              the file to upload
+     * @return the created OreVersion
+     */
+    public CompletableFuture<OreVersion> create(OreDeployVersionInfo deployVersionInfo, Path file) {
+        return enqueue(NetTasks.createVersion(cm(), project, deployVersionInfo, file));
+    }
 
     /**
      * If the version is not marked as Reviewed with {@link OreVersion#getReviewState()}

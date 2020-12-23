@@ -10,6 +10,7 @@ import de.dosmike.spongepowered.oreapi.exception.MissingPermissionException;
 import de.dosmike.spongepowered.oreapi.exception.NoResultException;
 import de.dosmike.spongepowered.oreapi.netobject.*;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
+import de.dosmike.spongepowered.oreapi.utility.MultiPartFormData;
 import org.jetbrains.annotations.Nullable;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -17,12 +18,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static de.dosmike.spongepowered.oreapi.ConnectionManager.parseJsonObject;
 import static de.dosmike.spongepowered.oreapi.ConnectionManager.tryPrintErrorBody;
 import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendField;
 
@@ -52,10 +56,24 @@ class NetTasks {
 		}
 	}
 
+	/**
+	 * Creates a authenticated connection to the api to the requested endpoint.
+	 * Uses the default content type "application/json"
+	 */
 	private static HttpsURLConnection connect(ConnectionManager connection, String method, String queryURI) throws IOException {
+		return connect(connection, method, "application/json", queryURI);
+	}
+
+	/**
+	 * Creates a authenticated connection to the api to the requested endpoint.
+	 * If you're not passing a content type here, you'll have to set it through other means
+	 */
+	private static HttpsURLConnection connect(ConnectionManager connection, String method, @Nullable String contentType, String queryURI) throws IOException {
 		auth(connection);
 		ConnectionManager.takeRequest();
-		return connection.getSession().authenticate(connection.createConnection(method, queryURI));
+		HttpsURLConnection https = connection.getSession().authenticate(connection.createConnection(method, queryURI));
+		if (contentType != null) https.setRequestProperty("Content-Type", contentType);
+		return https;
 	}
 
 	private static void checkResponseCode(HttpsURLConnection connection, OrePermission endPointPermission) throws IOException {
@@ -281,10 +299,62 @@ class NetTasks {
 	static Supplier<OreVersion> getVersion(ConnectionManager cm, OreProjectReference project, String versionName) {
 		return () -> {
 			try {
-				HttpsURLConnection connection = connect(cm, "GET", "/projects/" + project.getNamespace().toURLEncode() + "/versions/" + URLEncoder.encode(versionName, "UTF-8"));
+				HttpsURLConnection connection = connect(cm, "GET", "/projects/" + project.getNamespace().toURLEncode() + "/versions/" + urlencoded(versionName));
 				connection.setDoInput(true);
 				checkResponseCode(connection, OrePermission.View_Public_Info);
 				return cm.getCache().cacheVersion(project.getPluginId(), new OreVersion(project.toReference(), ConnectionManager.parseJsonObject(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	static Supplier<OreVersion> createVersion(ConnectionManager cm, OreProjectReference project, OreDeployVersionInfo info, Path file) {
+		return () -> {
+			try {
+				if (!"application/java-archive".equals(Files.probeContentType(file))) {
+					throw new IllegalArgumentException("The file type is not supported");
+				}
+			} catch (IOException e) {
+				throw new IllegalArgumentException("The supplied file is invalid", e);
+			}
+			try {
+				//content type null - will be set through MultiPartFormData#write
+				HttpsURLConnection connection = connect(cm, "POST", null, "/projects/" + project.getNamespace().toURLEncode() + "/versions");
+				connection.setDoInput(true);
+				MultiPartFormData mpfd = new MultiPartFormData();
+				mpfd.addProperty("plugin-info", JsonUtil.buildJson(info));
+				mpfd.addAsset("plugin-file", file);
+				mpfd.write(connection);
+				checkResponseCode(connection, OrePermission.Create_Version);
+				return cm.getCache().cacheVersion(project.getPluginId(), new OreVersion(project, parseJsonObject(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	/**
+	 * uncached
+	 */
+	static Supplier<OreVersion> scanVersion(ConnectionManager cm, OreProjectReference project, Path file) {
+		return () -> {
+			try {
+				if (!"application/java-archive".equals(Files.probeContentType(file))) {
+					throw new IllegalArgumentException("The file type is not supported");
+				}
+			} catch (IOException e) {
+				throw new IllegalArgumentException("The supplied file is invalid", e);
+			}
+			try {
+				//content type null - will be set through MultiPartFormData#write
+				HttpsURLConnection connection = connect(cm, "PUT", null, "/projects/" + project.getNamespace().toURLEncode() + "/versions/scan");
+				connection.setDoInput(true);
+				MultiPartFormData mpfd = new MultiPartFormData();
+				mpfd.addAsset("plugin-file", file);
+				mpfd.write(connection);
+				checkResponseCode(connection, OrePermission.Create_Version);
+				return new OreVersion(project, parseJsonObject(connection));
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}

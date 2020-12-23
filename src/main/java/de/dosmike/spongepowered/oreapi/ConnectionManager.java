@@ -99,7 +99,6 @@ public class ConnectionManager {
 		connection.setConnectTimeout(5000);
 		connection.setReadTimeout(5000);
 		connection.setRequestProperty("User-Agent", application);
-		connection.setRequestProperty("Content-Type", "application/json");
 		return connection;
 	}
 
