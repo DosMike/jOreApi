@@ -39,7 +39,7 @@ public class PublicVersions {
 	@Test
 	@Order(2)
 	public void getChangelog() {
-		String changeLog = versions.getResult().get(0).with(api, Versions::changelog).join();
+		String changeLog = versions.getResult().get(0).with(api, Versions.class, Versions::changelog).join();
 		assertFalse(changeLog.isEmpty());
 		assertTrue(versions.getResult().get(0).getChangelog().isPresent());
 	}

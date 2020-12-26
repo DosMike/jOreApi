@@ -55,7 +55,7 @@ public class OreProjectReference implements Serializable {
 		} else if (Members.class.isAssignableFrom(route)) {
 			return (T) apiInstance.projects().members(this);
 		} else if (Versions.class.isAssignableFrom(route)) {
-			return (T) apiInstance.projects().versions(this);
+			return (T) apiInstance.projects().versions();
 		}
 		throw new IllegalArgumentException("The supplied Route is not supported by with");
 	}
@@ -64,8 +64,16 @@ public class OreProjectReference implements Serializable {
 		return function.apply(with(apiInstance, route), this);
 	}
 
+	public <R> R with(OreApiV2 apiInstance, BiFunction<Projects, OreProjectReference, R> function) {
+		return function.apply(apiInstance.projects(), this);
+	}
+
 	public <T extends AbstractRoute, R> R with(OreApiV2 apiInstance, Class<T> route, Function<T, R> function) {
 		return function.apply(with(apiInstance, route));
+	}
+
+	public <R> R with(OreApiV2 apiInstance, Function<Projects, R> function) {
+		return function.apply(apiInstance.projects());
 	}
 
 	//Region builder
