@@ -1,28 +1,17 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
-import de.dosmike.spongepowered.oreapi.OreApiV2;
-import de.dosmike.spongepowered.oreapi.routes.Versions;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
 
-import java.io.Serializable;
-import java.net.URLEncoder;
 import java.util.Optional;
-import java.util.function.BiFunction;
 
-public class OreVersion implements Serializable {
+public class OreVersion extends OreVersionReference {
 
-	/**
-	 * This allows requests for version without having to specify the project again.
-	 * Also prevents accidentally specifying in the wrong project.
-	 */
-	OreProjectReference project;
+
 	@FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
 	long createdAt;
-	@FromJson("name")
-	String name;
 	@FromJson("dependencies")
 	OreVersionDependency[] dependencies;
 	@FromJson("visibility")
@@ -47,28 +36,8 @@ public class OreVersion implements Serializable {
 		JsonUtil.fillSelf(this, object);
 	}
 
-	public OreProjectReference getProjectRef() {
-		return project;
-	}
-
-	public <T> T with(OreApiV2 api, BiFunction<Versions, OreVersion, T> function) {
-		return function.apply(api.projects().versions(project), this);
-	}
-
 	public long getCreatedAt() {
 		return createdAt;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String getURLSafeName() {
-		try {
-			return URLEncoder.encode(name, "UTF-8");
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	public OreVersionDependency[] getDependencies() {
@@ -111,8 +80,4 @@ public class OreVersion implements Serializable {
 		return Optional.ofNullable(changelog);
 	}
 
-	@Override
-	public String toString() {
-		return name + "@" + getProjectRef().toString();
-	}
 }

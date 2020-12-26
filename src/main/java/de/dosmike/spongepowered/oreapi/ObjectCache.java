@@ -1,9 +1,6 @@
 package de.dosmike.spongepowered.oreapi;
 
-import de.dosmike.spongepowered.oreapi.netobject.OreNamespace;
-import de.dosmike.spongepowered.oreapi.netobject.OreProject;
-import de.dosmike.spongepowered.oreapi.netobject.OreProjectReference;
-import de.dosmike.spongepowered.oreapi.netobject.OreVersion;
+import de.dosmike.spongepowered.oreapi.netobject.*;
 import de.dosmike.spongepowered.oreapi.utility.CachingCollection;
 
 import java.util.*;
@@ -60,6 +57,14 @@ public class ObjectCache {
 				.findFirst();
 	}
 
+	public Optional<OreVersion> version(OreVersionReference version) {
+		CachingCollection<OreVersion> collection = oreVersionCache.get(version.getProjectRef().getPluginId().toLowerCase());
+		if (collection == null) return Optional.empty();
+		else return collection.stream()
+				.filter(v -> v.getName().equalsIgnoreCase(version.getName()))
+				.findFirst();
+	}
+
 //    public void exportState(OutputStream outputStream) throws IOException {
 //        ObjectOutputStream oos = new ObjectOutputStream(outputStream);
 //        oos.writeObject(oreProjectCache);
@@ -110,7 +115,7 @@ public class ObjectCache {
 		untrack(project.getPluginId());
 	}
 
-	public void untrack(OreVersion version) {
+	public void untrack(OreVersionReference version) {
 		CachingCollection<OreVersion> vcache = oreVersionCache.get(version.getProjectRef().getPluginId().toLowerCase(Locale.ROOT));
 		if (vcache == null) return;
 		vcache.removeIf(v -> v.getName().equals(version.getName()));

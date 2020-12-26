@@ -77,10 +77,10 @@ public class OreProjectReference implements Serializable {
 
 		}
 
-		public Builder owner(String owner) {
-			if (owner == null || owner.isEmpty())
+		public Builder projectId(String id) {
+			if (id == null || id.isEmpty())
 				throw new IllegalArgumentException("Owner can't be empty");
-			a = owner;
+			a = id;
 			return Builder.this;
 		}
 

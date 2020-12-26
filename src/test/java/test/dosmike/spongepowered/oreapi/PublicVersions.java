@@ -32,7 +32,7 @@ public class PublicVersions {
 	@Test
 	@Order(1)
 	public void listVersions() {
-		versions = api.projects().get(ns).thenCompose(p -> api.projects().versions(p).list(null)).join();
+		versions = api.projects().get(ns).thenCompose(p -> api.projects().versions().list(p, null)).join();
 		assertFalse(versions.getResult().isEmpty());
 	}
 
@@ -47,7 +47,7 @@ public class PublicVersions {
 	@Test
 	@Order(3)
 	public void getVersionDownload() {
-		System.out.println(versions.getResult().get(0).with(api, Versions::getDownloadURL).join());
+		System.out.println(api.projects().versions().downloadUrl(versions.getResult().get(0)).join());
 	}
 
 	@AfterAll

@@ -6,31 +6,30 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class Versions extends AbstractRoute {
 
-    private OreProjectReference project;
-
-    public Versions(OreApiV2 api, OreProjectReference reference) {
+    public Versions(OreApiV2 api) {
         super(api);
-        project = reference.toReference();
     }
 
     /**
      * @return empty if the connection failed or no such plugin exists
      */
-    public CompletableFuture<OreVersionList> list(@Nullable OrePaginationFilter pagination) {
+    public CompletableFuture<OreVersionList> list(OreProjectReference project, @Nullable OrePaginationFilter pagination) {
         return enqueue(NetTasks.listVersions(cm(), project, pagination));
     }
 
     /**
      * @return empty if the connection failed or no such plugin or version exists
      */
-    public CompletableFuture<OreVersion> get(String versionName) {
-        return cache().version(project.getPluginId(), versionName)
+    public CompletableFuture<OreVersion> get(OreVersionReference version) {
+        return cache().version(version.getProjectRef().getPluginId(), version.getName())
                 .map(CompletableFuture::completedFuture)
-                .orElseGet(() -> enqueue(NetTasks.getVersion(cm(), project, versionName)));
+                .orElseGet(() -> enqueue(NetTasks.getVersion(cm(), version)));
     }
 
     /**
@@ -40,10 +39,8 @@ public class Versions extends AbstractRoute {
      *
      * @return empty on error, or if no changelog is available
      */
-    public CompletableFuture<String> changelog(OreVersion version) {
-        if (!version.getProjectRef().equals(project))
-            throw new IllegalArgumentException("The supplied version does not relate to the referenced project (" + version.getProjectRef().toString() + " vs " + project.toString() + ")");
-        return get(version.getName())
+    public CompletableFuture<String> changelog(OreVersionReference version) {
+        return get(version)
                 .thenCompose(v -> v.getChangelog()
                         .map(CompletableFuture::completedFuture)
                         .orElseGet(() -> enqueue(NetTasks.getVerionChangelog(cm(), v))));
@@ -57,7 +54,7 @@ public class Versions extends AbstractRoute {
      * @param file the file to scan
      * @return a OreVersion for inspection
      */
-    public CompletableFuture<OreVersion> scan(Path file) {
+    public CompletableFuture<OreVersion> scan(OreProjectReference project, Path file) {
         return enqueue(NetTasks.scanVersion(cm(), project, file));
     }
 
@@ -66,11 +63,10 @@ public class Versions extends AbstractRoute {
      * project or owning organization.
      *
      * @param deployVersionInfo further information regarding this new version
-     * @param file              the file to upload
      * @return the created OreVersion
      */
-    public CompletableFuture<OreVersion> create(OreDeployVersionInfo deployVersionInfo, Path file) {
-        return enqueue(NetTasks.createVersion(cm(), project, deployVersionInfo, file));
+    public CompletableFuture<OreVersion> create(OreDeployVersionInfo deployVersionInfo) {
+        return enqueue(NetTasks.createVersion(cm(), deployVersionInfo));
     }
 
     /**
@@ -82,8 +78,6 @@ public class Versions extends AbstractRoute {
      * @return the newly cached instance for this version
      */
     public CompletableFuture<OreVersion> update(OreVersion version) {
-        if (!version.getProjectRef().equals(project))
-            throw new IllegalArgumentException("The supplied version does not relate to the referenced project");
         return enqueue(NetTasks.updateVersion(cm(), version));
     }
 
@@ -94,10 +88,19 @@ public class Versions extends AbstractRoute {
      *
      * @param version the version to delete
      */
-    public CompletableFuture<Void> delete(OreVersion version) {
-        if (!version.getProjectRef().equals(project))
-            throw new IllegalArgumentException("The supplied version does not relate to the referenced project");
+    public CompletableFuture<Void> delete(OreVersionReference version) {
         return enqueue(NetTasks.deleteVersion(cm(), version));
+    }
+
+    /**
+     * Gets the day stats (downloads) for the project in the specified date range.
+     *
+     * @param version the version to query
+     * @param from    the first day to query (inclusive)
+     * @param to      the last day to query (inclusive)
+     */
+    public CompletableFuture<Map<Date, OreVersionStatsDay>> stats(OreVersionReference version, Date from, Date to) {
+        return enqueue(NetTasks.getVersionStats(cm(), version, from, to));
     }
 
     /**
@@ -109,9 +112,7 @@ public class Versions extends AbstractRoute {
      * @param visibility this will be the new visibility for this project
      * @param comment    The api allows you to specify a reason for why you changed the visibility
      */
-    public CompletableFuture<OreVersion> visibility(OreVersion version, OreVisibility visibility, String comment) {
-        if (!version.getProjectRef().equals(project))
-            throw new IllegalArgumentException("The supplied version does not relate to the referenced project");
+    public <T extends OreVersionReference> CompletableFuture<T> visibility(T version, OreVisibility visibility, String comment) {
         return enqueue(NetTasks.updateVersionVisibility(cm(), version, visibility, comment));
     }
 
@@ -122,9 +123,7 @@ public class Versions extends AbstractRoute {
      * resulting from the user continuing.
      * THIS IS NOT PART OF THE API (but i include it anyway, because that might be a common goal)
      */
-    public CompletableFuture<URL> getDownloadURL(OreVersion version) {
-        if (!version.getProjectRef().equals(project))
-            throw new IllegalArgumentException("The supplied version does not relate to the referenced project (" + version.getProjectRef().toString() + " vs " + project.toString() + ")");
+    public CompletableFuture<URL> downloadUrl(OreVersion version) {
         return enqueue(NetTasks.getDownloadURL(cm(), version));
     }
 

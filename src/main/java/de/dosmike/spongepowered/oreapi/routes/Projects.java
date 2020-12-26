@@ -114,11 +114,10 @@ public class Projects extends AbstractRoute {
     /**
      * Returns the route object to read and manipulate project versions
      *
-     * @param project the project to manage versions on
      * @return the Versions route
      */
-    public Versions versions(OreProjectReference project) {
-        return new Versions(api, project);
+    public Versions versions() {
+        return new Versions(api);
     }
 
     /**

@@ -185,7 +185,7 @@ class NetTasks {
 		return () -> {
 			try {
 				HttpsURLConnection connection = connect(cm, "POST", "/projects/" + project.getNamespace().toURLEncode() + "/visibility");
-				ConnectionManager.postData(connection, update);
+				postData(connection, update);
 				checkResponseCode(connection, null);
 
 				//try to update and return the cached reference, if possible
@@ -301,38 +301,32 @@ class NetTasks {
 		};
 	}
 
-	static Supplier<OreVersion> getVersion(ConnectionManager cm, OreProjectReference project, String versionName) {
+	static Supplier<OreVersion> getVersion(ConnectionManager cm, OreVersionReference version) {
 		return () -> {
 			try {
-				HttpsURLConnection connection = connect(cm, "GET", "/projects/" + project.getNamespace().toURLEncode() + "/versions/" + urlencoded(versionName));
+				HttpsURLConnection connection = connect(cm, "GET", "/projects/" + version.getProjectRef().getNamespace().toURLEncode() + "/versions/" + version.getURLSafeName());
 				connection.setDoInput(true);
 				checkResponseCode(connection, OrePermission.View_Public_Info);
-				return cm.getCache().cacheVersion(project.getPluginId(), new OreVersion(project.toReference(), ConnectionManager.parseJsonObject(connection)));
+				return cm.getCache().cacheVersion(version.getProjectRef().getPluginId(), new OreVersion(version.getProjectRef(), ConnectionManager.parseJsonObject(connection)));
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}
 		};
 	}
 
-	static Supplier<OreVersion> createVersion(ConnectionManager cm, OreProjectReference project, OreDeployVersionInfo info, Path file) {
+	static Supplier<OreVersion> createVersion(ConnectionManager cm, OreDeployVersionInfo info) {
 		return () -> {
-			try {
-				if (!"application/java-archive".equals(Files.probeContentType(file))) {
-					throw new IllegalArgumentException("The file type is not supported");
-				}
-			} catch (IOException e) {
-				throw new IllegalArgumentException("The supplied file is invalid", e);
-			}
+			final OreProjectReference pref = info.getProjectRef();
 			try {
 				//content type null - will be set through MultiPartFormData#write
-				HttpsURLConnection connection = connect(cm, "POST", null, "/projects/" + project.getNamespace().toURLEncode() + "/versions");
+				HttpsURLConnection connection = connect(cm, "POST", null, "/projects/" + pref.getNamespace().toURLEncode() + "/versions");
 				connection.setDoInput(true);
 				MultiPartFormData mpfd = new MultiPartFormData();
 				mpfd.addProperty("plugin-info", JsonUtil.buildJson(info));
-				mpfd.addAsset("plugin-file", file);
+				mpfd.addAsset("plugin-file", info.getReleaseAsset());
 				mpfd.write(connection);
 				checkResponseCode(connection, OrePermission.Create_Version);
-				return cm.getCache().cacheVersion(project.getPluginId(), new OreVersion(project, parseJsonObject(connection)));
+				return cm.getCache().cacheVersion(pref.getPluginId(), new OreVersion(pref, parseJsonObject(connection)));
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}
@@ -380,7 +374,7 @@ class NetTasks {
 		};
 	}
 
-	static Supplier<Void> deleteVersion(ConnectionManager cm, OreVersion version) {
+	static Supplier<Void> deleteVersion(ConnectionManager cm, OreVersionReference version) {
 		return () -> {
 			try {
 				cm.getCache().untrack(version);
@@ -393,7 +387,7 @@ class NetTasks {
 		};
 	}
 
-	static Supplier<OreVersion> updateVersionVisibility(ConnectionManager cm, OreVersion version, OreVisibility visibility, String comment) {
+	static <T extends OreVersionReference> Supplier<T> updateVersionVisibility(ConnectionManager cm, T version, OreVisibility visibility, String comment) {
 		JsonObject requestJson = new JsonObject();
 		requestJson.addProperty("visibility", visibility.toString());
 		requestJson.addProperty("comment", comment != null ? comment : "");
@@ -402,12 +396,17 @@ class NetTasks {
 		return () -> {
 			try {
 				HttpsURLConnection connection = connect(cm, "POST", "/projects/" + version.getProjectRef().getNamespace().toURLEncode() + "/versions/" + version.getURLSafeName() + "/visibility");
-				connection.setDoInput(true);
-				postData(connection, JsonUtil.buildJson(version.getTags(), "patchVersion").toString());
+				postData(connection, update);
 				checkResponseCode(connection, OrePermission.Edit_Version);
-				OreVersion v = cm.getCache().version(version.getProjectRef().getPluginId(), version.getName()).orElse(version);
-				friendField(v, "visibility", visibility);
-				return v;
+
+				//try to update and return the cached reference, if possible
+				Optional<OreVersion> cacheversion = cm.getCache().version(version);
+				cacheversion.ifPresent(v -> friendField(v, "visibility", visibility));
+				if (version instanceof OreVersion) {
+					return (T) cacheversion.orElse((OreVersion) version);
+				} else {
+					return (T) version;
+				}
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}
@@ -425,6 +424,32 @@ class NetTasks {
 				version.updateChangelog(changelog);
 				return changelog;
 			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	/**
+	 * The api docs say this endpoint requires is_subject_member, but the permission
+	 * is not listed in the NamedPermissions enum. don't know what's going on with that
+	 */
+	static Supplier<Map<Date, OreVersionStatsDay>> getVersionStats(ConnectionManager cm, OreVersionReference version, Date from, Date to) {
+		final SimpleDateFormat dateOnly = new SimpleDateFormat("yyyy-MM-dd");
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET",
+						"/projects/" + version.getProjectRef().getNamespace().toURLEncode() +
+								"/versions/" + version.getURLSafeName() +
+								"/stats?fromDate=" + urlencoded(dateOnly.format(from) + "&toDate=" + urlencoded(dateOnly.format(to))));
+				connection.setDoInput(true);
+				checkResponseCode(connection, null);
+				JsonObject container = ConnectionManager.parseJsonObject(connection);
+				Map<Date, OreVersionStatsDay> map = new HashMap<>();
+				for (Map.Entry<String, JsonElement> entry : container.entrySet()) {
+					map.put(dateOnly.parse(entry.getKey()), new OreVersionStatsDay(entry.getValue().getAsJsonObject()));
+				}
+				return map;
+			} catch (IOException | ParseException e) {
 				throw new NoResultException(e);
 			}
 		};
