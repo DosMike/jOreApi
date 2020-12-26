@@ -13,6 +13,7 @@ public class ObjectCache {
 	ObjectCache() {
 	}
 
+	//region project
 	private final CachingCollection<OreProject> oreProjectCache = new CachingCollection<>(5, TimeUnit.MINUTES);
 
 	public OreProject cacheProject(OreProject project) {
@@ -37,6 +38,31 @@ public class ObjectCache {
 		return oreProjectCache.stream().filter(e -> e.getNamespace().equals(namespace)).findFirst();
 	}
 
+	public void untrack(OreNamespace ns) {
+		//from versions
+		Set<String> invalidatedKeys = new HashSet<>();
+		for (Map.Entry<String, CachingCollection<OreVersion>> entry : oreVersionCache.entrySet()) {
+			if (entry.getValue().stream().anyMatch(v -> v.getProjectRef().getNamespace().equals(ns)))
+				invalidatedKeys.add(entry.getKey());
+		}
+		for (String k : invalidatedKeys) oreVersionCache.remove(k);
+		//from project
+		oreProjectCache.removeIf(p -> friendField(p, "shadowNamespace").equals(ns));
+	}
+
+	public void untrack(String pluginId) {
+		//from versions
+		oreVersionCache.remove(pluginId.toLowerCase(Locale.ROOT));
+		//from plugins
+		oreProjectCache.removeIf(p -> p.getPluginId().equalsIgnoreCase(pluginId));
+	}
+
+	public void untrack(OreProjectReference project) {
+		untrack(project.getPluginId());
+	}
+	//endregion
+
+	//region version
 	private final Map<String, CachingCollection<OreVersion>> oreVersionCache = new HashMap<>();
 
 	public OreVersion cacheVersion(String pluginId, OreVersion version) {
@@ -65,19 +91,30 @@ public class ObjectCache {
 				.findFirst();
 	}
 
-//    public void exportState(OutputStream outputStream) throws IOException {
-//        ObjectOutputStream oos = new ObjectOutputStream(outputStream);
-//        oos.writeObject(oreProjectCache);
-//        oos.writeObject(oreVersionCache);
-//        oos.writeObject(ConnectionManager.get().session);
-//        oos.flush();
-//    }
-//    public void importState(InputStream inputStream) throws IOException, ClassNotFoundException {
-//        ObjectInputStream ois = new ObjectInputStream(inputStream);
-//        oreProjectCache = (CachingCollection<OreProject>) ois.readObject();
-//        oreVersionCache = (Map<String, CachingCollection<OreVersion>>) ois.readObject();
-//        ConnectionManager.get().session = (OreSession) ois.readObject();
-//    }
+	public void untrack(OreVersionReference version) {
+		CachingCollection<OreVersion> vcache = oreVersionCache.get(version.getProjectRef().getPluginId().toLowerCase(Locale.ROOT));
+		if (vcache == null) return;
+		vcache.removeIf(v -> v.getName().equals(version.getName()));
+	}
+	//endregion
+
+	//region user
+	private final CachingCollection<OreUser> oreUsers = new CachingCollection<>(5, TimeUnit.MINUTES);
+
+	public OreUser cacheUser(OreUser user) {
+		oreUsers.add(user);
+		return user;
+	}
+
+	public Optional<OreUser> user(String name) {
+		return oreUsers.stream().filter(u -> u.getName().equalsIgnoreCase(name)).findFirst();
+	}
+
+	public void untrack(OreUser user) {
+		oreUsers.removeIf(u -> u.getName().equalsIgnoreCase(user.getName()));
+	}
+
+	//endregion
 
 	public void poke() {
 		// CachingCollection.size() performs timeout check and returns the remaining size
@@ -92,32 +129,4 @@ public class ObjectCache {
 
 	}
 
-	public void untrack(OreNamespace ns) {
-		//from versions
-		Set<String> invalidatedKeys = new HashSet<>();
-		for (Map.Entry<String, CachingCollection<OreVersion>> entry : oreVersionCache.entrySet()) {
-			if (entry.getValue().stream().anyMatch(v -> v.getProjectRef().getNamespace().equals(ns)))
-				invalidatedKeys.add(entry.getKey());
-		}
-		for (String k : invalidatedKeys) oreVersionCache.remove(k);
-		//from project
-		oreProjectCache.removeIf(p -> friendField(p, "shadowNamespace").equals(ns));
-	}
-
-	public void untrack(String pluginId) {
-		//from versions
-		oreVersionCache.remove(pluginId.toLowerCase(Locale.ROOT));
-		//from plugins
-		oreProjectCache.removeIf(p -> p.getPluginId().equalsIgnoreCase(pluginId));
-	}
-
-	public void untrack(OreProjectReference project) {
-		untrack(project.getPluginId());
-	}
-
-	public void untrack(OreVersionReference version) {
-		CachingCollection<OreVersion> vcache = oreVersionCache.get(version.getProjectRef().getPluginId().toLowerCase(Locale.ROOT));
-		if (vcache == null) return;
-		vcache.removeIf(v -> v.getName().equals(version.getName()));
-	}
 }

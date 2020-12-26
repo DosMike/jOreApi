@@ -521,5 +521,44 @@ class NetTasks {
 			}
 		};
 	}
+
 	//endregion
+	//region user
+	static Supplier<OreUserList> userSearch(ConnectionManager cm, OreUserFilter filter) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/users?" + filter.toString());
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				OreUserList resultList = new OreUserList(ConnectionManager.parseJsonObject(connection), OreUser.class, filter);
+				for (OreUser u : resultList.getResult())
+					cm.getCache().cacheUser(u);
+				return resultList;
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	static Supplier<OreUser> getUser(ConnectionManager cm, String name, boolean self) {
+		return () -> {
+			final String queryName;
+			if (self)
+				queryName = "@me";
+			else if (name == null || !name.matches("\\w+"))
+				throw new NoResultException("The supplied username is invalid");
+			else
+				queryName = name;
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/users/" + urlencoded(name));
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				return cm.getCache().cacheUser(new OreUser(ConnectionManager.parseJsonObject(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+	//endregion
+
 }
