@@ -185,7 +185,6 @@ class NetTasks {
 		return () -> {
 			try {
 				HttpsURLConnection connection = connect(cm, "POST", "/projects/" + project.getNamespace().toURLEncode() + "/visibility");
-//				connection.setDoInput(true);
 				ConnectionManager.postData(connection, update);
 				checkResponseCode(connection, null);
 
@@ -208,7 +207,6 @@ class NetTasks {
 			try {
 				cm.getCache().untrack(project);
 				HttpsURLConnection connection = connect(cm, "DELETE", "/projects/" + project.getNamespace().toURLEncode());
-				connection.setDoInput(true);
 				checkResponseCode(connection, OrePermission.Hard_Delete_Project);
 				return null;
 			} catch (IOException e) {
@@ -376,6 +374,40 @@ class NetTasks {
 				postData(connection, JsonUtil.buildJson(version.getTags(), "patchVersion").toString());
 				checkResponseCode(connection, OrePermission.Edit_Version);
 				return cm.getCache().cacheVersion(version.getProjectRef().getPluginId(), new OreVersion(version.getProjectRef(), parseJsonObject(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	static Supplier<Void> deleteVersion(ConnectionManager cm, OreVersion version) {
+		return () -> {
+			try {
+				cm.getCache().untrack(version);
+				HttpsURLConnection connection = connect(cm, "DELETE", "/projects/" + version.getProjectRef().getNamespace().toURLEncode() + "/versions/" + version.getURLSafeName());
+				checkResponseCode(connection, OrePermission.Hard_Delete_Version);
+				return null;
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	static Supplier<OreVersion> updateVersionVisibility(ConnectionManager cm, OreVersion version, OreVisibility visibility, String comment) {
+		JsonObject requestJson = new JsonObject();
+		requestJson.addProperty("visibility", visibility.toString());
+		requestJson.addProperty("comment", comment != null ? comment : "");
+		final String update = requestJson.toString();
+
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "POST", "/projects/" + version.getProjectRef().getNamespace().toURLEncode() + "/versions/" + version.getURLSafeName() + "/visibility");
+				connection.setDoInput(true);
+				postData(connection, JsonUtil.buildJson(version.getTags(), "patchVersion").toString());
+				checkResponseCode(connection, OrePermission.Edit_Version);
+				OreVersion v = cm.getCache().version(version.getProjectRef().getPluginId(), version.getName()).orElse(version);
+				friendField(v, "visibility", visibility);
+				return v;
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}

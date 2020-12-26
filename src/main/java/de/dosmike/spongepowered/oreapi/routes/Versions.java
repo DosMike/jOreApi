@@ -88,6 +88,34 @@ public class Versions extends AbstractRoute {
     }
 
     /**
+     * Removes the version from the remote and from the cache.<br>
+     * <b>This is permanent and cannot be undone!</b>
+     * It is in fact so permanent, that a new version with the same name may not be created unless unlocked by an admin.
+     *
+     * @param version the version to delete
+     */
+    public CompletableFuture<Void> delete(OreVersion version) {
+        if (!version.getProjectRef().equals(project))
+            throw new IllegalArgumentException("The supplied version does not relate to the referenced project");
+        return enqueue(NetTasks.deleteVersion(cm(), version));
+    }
+
+    /**
+     * The required permissions vary depending on the wanted visibility. Having reviewer permission
+     * guarantees access to all visibilities no matter the circumstances. The docs look rather copy-pasty.
+     * Anyhow, this requests the visibility of the version being changed on the remote, followed by updating the
+     * cached version object if successful and present
+     *
+     * @param visibility this will be the new visibility for this project
+     * @param comment    The api allows you to specify a reason for why you changed the visibility
+     */
+    public CompletableFuture<OreVersion> visibility(OreVersion version, OreVisibility visibility, String comment) {
+        if (!version.getProjectRef().equals(project))
+            throw new IllegalArgumentException("The supplied version does not relate to the referenced project");
+        return enqueue(NetTasks.updateVersionVisibility(cm(), version, visibility, comment));
+    }
+
+    /**
      * If the version is not marked as Reviewed with {@link OreVersion#getReviewState()}
      * you should prompt the user with a disclaimer, that installing such plugins might be
      * unsafe and that neither you or the SpongePowered Team is responsible for any damages
