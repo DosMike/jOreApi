@@ -2,6 +2,7 @@ package de.dosmike.spongepowered.oreapi;
 
 import de.dosmike.spongepowered.oreapi.routes.Permissions;
 import de.dosmike.spongepowered.oreapi.routes.Projects;
+import de.dosmike.spongepowered.oreapi.routes.Users;
 
 /**
  * This class is the "party in the front" - enjoy a class with clean API<br>
@@ -65,6 +66,16 @@ public class OreApiV2 implements AutoCloseable {
 	 */
 	public Projects projects() {
 		return new Projects(this);
+	}
+
+	/**
+	 * This returns the users route. User information is read only but can provide information
+	 * about roles, permissions, membership in organizations and projects.
+	 *
+	 * @return Users route
+	 */
+	public Users users() {
+		return new Users(this);
 	}
 
 	public static ConnectionManager.Builder builder() {
