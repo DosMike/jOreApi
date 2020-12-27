@@ -1,5 +1,6 @@
 package de.dosmike.spongepowered.oreapi;
 
+import de.dosmike.spongepowered.oreapi.routes.Organizations;
 import de.dosmike.spongepowered.oreapi.routes.Permissions;
 import de.dosmike.spongepowered.oreapi.routes.Projects;
 import de.dosmike.spongepowered.oreapi.routes.Users;
@@ -76,6 +77,17 @@ public class OreApiV2 implements AutoCloseable {
 	 */
 	public Users users() {
 		return new Users(this);
+	}
+
+	/**
+	 * This returns the organizations route. Organizations can not be created or deleted through
+	 * the API, but you are able to fetch and manipulate the organizations member list, given you
+	 * have the right permission.
+	 *
+	 * @return Organizations route
+	 */
+	public Organizations organizations() {
+		return new Organizations(this);
 	}
 
 	public static ConnectionManager.Builder builder() {

@@ -81,7 +81,7 @@ public class Projects extends AbstractRoute {
      * @return the Member route
      */
     public Members members(OreProjectReference project) {
-        return new Members(api, project);
+        return new Members.Project(api, project);
     }
 
     /**

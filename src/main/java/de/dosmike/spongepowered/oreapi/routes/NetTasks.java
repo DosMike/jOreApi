@@ -215,7 +215,7 @@ class NetTasks {
 		};
 	}
 
-	static Supplier<OreMemberList> getMembers(ConnectionManager cm, OreProjectReference project) {
+	static Supplier<OreMemberList> getProjectMembers(ConnectionManager cm, OreProjectReference project) {
 		return () -> {
 			try {
 				//i'll just just bump the limit since this endpoint is not implementing proper pagination
@@ -230,7 +230,7 @@ class NetTasks {
 		};
 	}
 
-	static Supplier<Void> setMembers(ConnectionManager cm, OreProjectReference project, Map<String, OreRole> roles) {
+	static Supplier<Void> setProjectMembers(ConnectionManager cm, OreProjectReference project, Map<String, OreRole> roles) {
 		//build post body
 		JsonArray array = new JsonArray();
 		roles.entrySet().stream().map(e -> {
@@ -554,6 +554,54 @@ class NetTasks {
 				connection.setDoInput(true);
 				checkResponseCode(connection, OrePermission.View_Public_Info);
 				return cm.getCache().cacheUser(new OreUser(ConnectionManager.parseJsonObject(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+	//endregion
+
+	//region organization
+
+	/**
+	 * this is basically a duplicate to getProjectMembers. Might do something about that later
+	 */
+	static Supplier<OreMemberList> getOrganizationMembers(ConnectionManager cm, String organization) {
+		return () -> {
+			try {
+				//i'll just just bump the limit since this endpoint is not implementing proper pagination
+				// don't think there will ever be more that 100 members in a project
+				HttpsURLConnection connection = connect(cm, "GET", "/organizations/" + urlencoded(organization) + "/members?limit=100");
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				return new OreMemberList(ConnectionManager.parseJsonArray(connection));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	/**
+	 * this is basically a duplicate to setProjectMembers. Might do something about that later
+	 */
+	static Supplier<Void> setOrganizationMembers(ConnectionManager cm, String organization, Map<String, OreRole> roles) {
+		//build post body
+		JsonArray array = new JsonArray();
+		roles.entrySet().stream().map(e -> {
+			JsonObject entry = new JsonObject();
+			entry.addProperty("name", e.getKey());
+			entry.addProperty("role", e.getValue().name());
+			return entry;
+		}).forEach(array::add);
+		String requestBody = array.toString();
+
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "POST", "/organizations/" + urlencoded(organization) + "/members");
+				connection.setDoInput(true);
+				ConnectionManager.postData(connection, requestBody);
+				checkResponseCode(connection, OrePermission.Manage_Subject_Members);
+				return null;
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}
