@@ -3,12 +3,13 @@ package de.dosmike.spongepowered.oreapi.netobject;
 import com.google.gson.JsonArray;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class HeadlessPaginationList<T> implements Supplier<List<T>> {
+public class HeadlessPaginationList<T> implements Supplier<List<T>>, Serializable {
 
 	private T[] elements;
 

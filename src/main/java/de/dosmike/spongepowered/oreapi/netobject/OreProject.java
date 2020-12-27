@@ -4,10 +4,9 @@ import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.utility.*;
 
-import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
-public class OreProject extends OreProjectReference implements Serializable {
+public class OreProject extends OreProjectReference {
 
 	/**
 	 * used for updating. if you change the name/owner you can't update the repository

@@ -2,7 +2,9 @@ package de.dosmike.spongepowered.oreapi.netobject;
 
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 
-public class OreProjectTemplate {
+import java.io.Serializable;
+
+public class OreProjectTemplate implements Serializable {
 
 	@FromJson("name")
 	private final String name;

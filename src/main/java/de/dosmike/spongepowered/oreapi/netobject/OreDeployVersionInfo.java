@@ -3,10 +3,11 @@ package de.dosmike.spongepowered.oreapi.netobject;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class OreDeployVersionInfo {
+public class OreDeployVersionInfo implements Serializable {
 
     OreProjectReference projectReference;
 
