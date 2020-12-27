@@ -562,6 +562,18 @@ class NetTasks {
 	//endregion
 
 	//region organization
+	static Supplier<OreOrganization> getOrganization(ConnectionManager cm, String organizaiton) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/organizations/" + urlencoded(organizaiton));
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				return new OreOrganization(parseJsonObject(connection));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
 
 	/**
 	 * this is basically a duplicate to getProjectMembers. Might do something about that later
