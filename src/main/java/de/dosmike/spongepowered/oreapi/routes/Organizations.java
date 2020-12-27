@@ -18,4 +18,14 @@ public class Organizations extends AbstractRoute {
         return new Members.Organization(api, organization);
     }
 
+    /**
+     * Create an instance for namespaced permission checking
+     *
+     * @param organization the organization to prepare the route for
+     * @return the permission route
+     */
+    public Permissions permissions(String organization) {
+        return Permissions.organisation(api, organization);
+    }
+
 }
