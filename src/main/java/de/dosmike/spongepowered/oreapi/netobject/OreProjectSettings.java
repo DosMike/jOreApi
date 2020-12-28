@@ -1,7 +1,7 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
-import de.dosmike.spongepowered.oreapi.OreApiV2;
+import de.dosmike.spongepowered.oreapi.routes.Projects;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonTags;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
@@ -88,7 +88,7 @@ public class OreProjectSettings implements Serializable {
 	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
 	 *
 	 * @param keywords the new set of keywords for this project
-	 * @see OreApiV2#updateProject
+	 * @see Projects#update(OreProject)
 	 * @see OreProject#update
 	 */
 	public void setKeywords(Collection<String> keywords) {
@@ -100,7 +100,7 @@ public class OreProjectSettings implements Serializable {
 	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
 	 *
 	 * @param homepageUrl the new url
-	 * @see OreApiV2#updateProject
+	 * @see Projects#update(OreProject)
 	 * @see OreProject#update
 	 */
 	public void setHomepageUrl(String homepageUrl) {
@@ -112,7 +112,7 @@ public class OreProjectSettings implements Serializable {
 	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
 	 *
 	 * @param issuesUrl the new url
-	 * @see OreApiV2#updateProject
+	 * @see Projects#update(OreProject)
 	 * @see OreProject#update
 	 */
 	public void setIssuesUrl(String issuesUrl) {
@@ -124,7 +124,7 @@ public class OreProjectSettings implements Serializable {
 	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
 	 *
 	 * @param sourcesUrl the new url
-	 * @see OreApiV2#updateProject
+	 * @see Projects#update(OreProject)
 	 * @see OreProject#update
 	 */
 	public void setSourcesUrl(String sourcesUrl) {
@@ -136,7 +136,7 @@ public class OreProjectSettings implements Serializable {
 	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
 	 *
 	 * @param supportUrl the new url
-	 * @see OreApiV2#updateProject
+	 * @see Projects#update(OreProject)
 	 * @see OreProject#update
 	 */
 	public void setSupportUrl(String supportUrl) {
@@ -157,7 +157,7 @@ public class OreProjectSettings implements Serializable {
 	 *
 	 * @param licenseName the name for your projects license
 	 * @param licenseUrl  the url for your projects license
-	 * @see OreApiV2#updateProject
+	 * @see Projects#update(OreProject)
 	 * @see OreProject#update
 	 */
 	public void setLicenseName(String licenseName, String licenseUrl) {
@@ -171,7 +171,7 @@ public class OreProjectSettings implements Serializable {
 	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
 	 *
 	 * @param forumSync true if you want the forum to be synced
-	 * @see OreApiV2#updateProject
+	 * @see Projects#update(OreProject)
 	 * @see OreProject#update
 	 */
 	public void setForumSync(boolean forumSync) {
