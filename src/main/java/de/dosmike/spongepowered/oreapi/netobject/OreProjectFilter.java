@@ -4,15 +4,7 @@ import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class OreProjectFilter extends OrePaginationFilter {
-
-	public enum Sort {
-		Stars, Downloads, Views, Newest,
-		/**
-		 * this is the default
-		 */
-		Updated, Only_Relevance, Recent_Downloads, Recent_Views
-	}
+public class OreProjectFilter extends OreCompactProjectFilter {
 
 	String query = null;
 	Set<OreCategory> categories = new HashSet<>();
@@ -22,7 +14,6 @@ public class OreProjectFilter extends OrePaginationFilter {
 	Map<String, String> platforms = new HashMap<>();
 	Set<OreStability> stabilities = new HashSet<>();
 	String owner = null;
-	Sort sort = Sort.Updated;
 	boolean sortByRelevance = true;
 	boolean exact = false;
 
@@ -120,14 +111,6 @@ public class OreProjectFilter extends OrePaginationFilter {
 		return owner;
 	}
 
-	public void setSorting(Sort sorting) {
-		this.sort = sorting;
-	}
-
-	public Sort getSorting() {
-		return sort;
-	}
-
 	public void doSortByRelevance(boolean sortByRelevance) {
 		this.sortByRelevance = sortByRelevance;
 	}
@@ -169,7 +152,6 @@ public class OreProjectFilter extends OrePaginationFilter {
 		if (owner != null) {
 			elements.add("owner=" + urlEncoded(owner));
 		}
-		elements.add("sort=" + urlEncoded(sort.name().toLowerCase(Locale.ROOT)));
 		elements.add("relevance=" + urlEncoded(sortByRelevance ? "true" : "false"));
 		elements.add("exact=" + urlEncoded(exact ? "true" : "false"));
 		elements.add(super.toString());

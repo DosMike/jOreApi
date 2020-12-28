@@ -6,7 +6,7 @@ import de.dosmike.spongepowered.oreapi.utility.*;
 
 import java.util.concurrent.CompletableFuture;
 
-public class OreProject extends OreProjectReference {
+public class OreProject extends OreCompactProject {
 
 	/**
 	 * used for updating. if you change the name/owner you can't update the repository
@@ -20,16 +20,7 @@ public class OreProject extends OreProjectReference {
 
 	@FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
 	long createdAt;
-	@FromJson("name")
-	@JsonTags("patchProject")
-	String name;
-	@FromJson("promoted_versions")
-	OrePromotedVersion[] promotedVersions;
-	@FromJson("stats")
-	OreProjectStatsAll stats;
-	@FromJson("category")
-	@JsonTags("patchProject")
-	OreCategory category;
+
 	/**
 	 * the summary is limited to 120 characters
 	 */
@@ -38,8 +29,6 @@ public class OreProject extends OreProjectReference {
 	String summary;
 	@FromJson(value = "last_updated", mapper = TypeMappers.StringTimestampMapper.class)
 	long lastUpdate;
-	@FromJson("visibility")
-	OreVisibility visibility;
 	@FromJson("settings")
 	@JsonTags("patchProject")
 	OreProjectSettings settings;
@@ -56,32 +45,12 @@ public class OreProject extends OreProjectReference {
 		return createdAt;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public OrePromotedVersion[] getPromotedVersions() {
-		return promotedVersions;
-	}
-
-	public OreProjectStatsAll getStats() {
-		return stats;
-	}
-
-	public OreCategory getCategory() {
-		return category;
-	}
-
 	public String getSummary() {
 		return summary;
 	}
 
 	public long getLastUpdate() {
 		return lastUpdate;
-	}
-
-	public OreVisibility getVisibility() {
-		return visibility;
 	}
 
 	public OreProjectSettings getSettings() {
