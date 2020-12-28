@@ -24,7 +24,9 @@ public class Users extends AbstractRoute {
      * Get the user object for the user represented by the current session
      */
     public CompletableFuture<OreUser> self() {
-        return enqueue(NetTasks.getUser(cm(), null, true));
+        return cache().user("@me")
+                .map(CompletableFuture::completedFuture)
+                .orElseGet(() -> enqueue(NetTasks.getUser(cm(), null, true)));
     }
 
     /**
@@ -36,6 +38,8 @@ public class Users extends AbstractRoute {
      * @return the OreUser, if such exists
      */
     public CompletableFuture<OreUser> get(String name) {
-        return enqueue(NetTasks.getUser(cm(), name, false));
+        return cache().user(name)
+                .map(CompletableFuture::completedFuture)
+                .orElseGet(() -> enqueue(NetTasks.getUser(cm(), name, false)));
     }
 }
