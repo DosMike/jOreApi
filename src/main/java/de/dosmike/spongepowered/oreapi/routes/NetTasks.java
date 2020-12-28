@@ -521,8 +521,8 @@ class NetTasks {
 			}
 		};
 	}
-
 	//endregion
+
 	//region user
 	static Supplier<OreUserList> userSearch(ConnectionManager cm, OreUserFilter filter) {
 		return () -> {
@@ -550,10 +550,49 @@ class NetTasks {
 			else
 				queryName = name;
 			try {
-				HttpsURLConnection connection = connect(cm, "GET", "/users/" + urlencoded(name));
+				HttpsURLConnection connection = connect(cm, "GET", "/users/" + urlencoded(queryName));
 				connection.setDoInput(true);
 				checkResponseCode(connection, OrePermission.View_Public_Info);
 				return cm.getCache().cacheUser(new OreUser(ConnectionManager.parseJsonObject(connection)));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	static Supplier<OreMembershipList> getUserMemberships(ConnectionManager cm, String name) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/users/" + urlencoded(name) + "/memberships");
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				return new OreMembershipList(parseJsonArray(connection));
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	static Supplier<OreCompactProjectList> getUserStarred(ConnectionManager cm, String name, OreCompactProjectFilter filter) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/users/" + urlencoded(name) + "/starred");
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				return new OreCompactProjectList(parseJsonObject(connection), OreCompactProject.class, filter);
+			} catch (IOException e) {
+				throw new NoResultException(e);
+			}
+		};
+	}
+
+	static Supplier<OreCompactProjectList> getUserWatching(ConnectionManager cm, String name, OreCompactProjectFilter filter) {
+		return () -> {
+			try {
+				HttpsURLConnection connection = connect(cm, "GET", "/users/" + urlencoded(name) + "/watching");
+				connection.setDoInput(true);
+				checkResponseCode(connection, OrePermission.View_Public_Info);
+				return new OreCompactProjectList(parseJsonObject(connection), OreCompactProject.class, filter);
 			} catch (IOException e) {
 				throw new NoResultException(e);
 			}

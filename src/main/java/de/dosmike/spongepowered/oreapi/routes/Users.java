@@ -1,9 +1,8 @@
 package de.dosmike.spongepowered.oreapi.routes;
 
 import de.dosmike.spongepowered.oreapi.OreApiV2;
-import de.dosmike.spongepowered.oreapi.netobject.OreUser;
-import de.dosmike.spongepowered.oreapi.netobject.OreUserFilter;
-import de.dosmike.spongepowered.oreapi.netobject.OreUserList;
+import de.dosmike.spongepowered.oreapi.netobject.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -42,4 +41,40 @@ public class Users extends AbstractRoute {
                 .map(CompletableFuture::completedFuture)
                 .orElseGet(() -> enqueue(NetTasks.getUser(cm(), name, false)));
     }
+
+    /**
+     * Fetch the objects that a user has a membership relation with.
+     * These are be projects and organizations, both wrapped in {@link OreMembership}s.
+     *
+     * @param user the user to query memberships for
+     * @return the list of membership objects
+     */
+    public CompletableFuture<OreMembershipList> memberships(String user) {
+        return enqueue(NetTasks.getUserMemberships(cm(), user));
+    }
+
+    /**
+     * Fetch a compact list of all projects a user has starred.
+     *
+     * @param user   the user to query
+     * @param filter the filter to sort and paginate or null
+     * @return the compact list of starred projects
+     * @see OreCompactProject
+     */
+    public CompletableFuture<OreCompactProjectList> starred(String user, @Nullable OreCompactProjectFilter filter) {
+        return enqueue(NetTasks.getUserStarred(cm(), user, filter));
+    }
+
+    /**
+     * Fetch a compact list of all projects a user is watching.
+     *
+     * @param user   the user to query
+     * @param filter the filter to sort and paginate or null
+     * @return the compact list of starred projects
+     * @see OreCompactProject
+     */
+    public CompletableFuture<OreCompactProjectList> watching(String user, @Nullable OreCompactProjectFilter filter) {
+        return enqueue(NetTasks.getUserWatching(cm(), user, filter));
+    }
+
 }
