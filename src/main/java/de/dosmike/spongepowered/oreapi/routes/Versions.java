@@ -24,9 +24,31 @@ public class Versions extends AbstractRoute {
     }
 
     /**
+     * Get a version from the remote. This will use the cache owned by your
+     * api instance to speed things up. The cache by default is 5 minutes.<br>
+     * If you don't want to use the cache and to get a fresh instance of this object,
+     * try {@link #fetch(OreVersionReference)} instead.
+     *
      * @return empty if the connection failed or no such plugin or version exists
      */
     public CompletableFuture<OreVersion> get(OreVersionReference version) {
+        return cache().version(version.getProjectRef().getPluginId(), version.getName())
+                .map(CompletableFuture::completedFuture)
+                .orElseGet(() -> enqueue(NetTasks.getVersion(cm(), version)));
+    }
+
+    /**
+     * Intended to renew your OreVersion instance, as it's not advised to keep
+     * instances around for long. While your API instance has sole ownership over
+     * your instance cache, they might have changed on the remote.
+     * If you don't care and rather access the cached object, use {@link #get(OreVersionReference)}
+     * instead.<br>
+     * Best usage is probably using something along the lines of
+     * <code>OreVersion#with(OreApiV2, Versions::fetch)</code>
+     *
+     * @return empty if the connection failed or no such plugin or version exists
+     */
+    public CompletableFuture<OreVersion> fetch(OreVersionReference version) {
         return cache().version(version.getProjectRef().getPluginId(), version.getName())
                 .map(CompletableFuture::completedFuture)
                 .orElseGet(() -> enqueue(NetTasks.getVersion(cm(), version)));

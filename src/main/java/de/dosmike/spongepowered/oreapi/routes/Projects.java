@@ -37,12 +37,32 @@ public class Projects extends AbstractRoute {
     }
 
     /**
+     * Get a project from the remote. This will use the cache owned by your
+     * api instance to speed things up. The cache by default is 5 minutes.<br>
+     * If you don't want to use the cache and to get a fresh instance of this object,
+     * try {@link #fetch(OreProjectReference)} instead.
+     *
      * @return empty if the connection failed or no such plugin exists
      */
     public CompletableFuture<OreProject> get(OreNamespace namespace) {
         return cache().project(namespace)
                 .map(CompletableFuture::completedFuture)
                 .orElseGet(() -> enqueue(NetTasks.getProject(cm(), namespace)));
+    }
+
+    /**
+     * Intended to renew your OreProject instance, as it's not advised to keep
+     * instances around for long. While your API instance has sole ownership over
+     * your instance cache, they might have changed on the remote.
+     * If you don't care and rather access the cached object, use {@link #get(OreNamespace)}
+     * instead.<br>
+     * Best usage is probably using something along the lines of
+     * <code>OreProject#with(OreApiV2, Projects::fetch)</code>
+     *
+     * @return empty if the connection failed or no such plugin exists
+     */
+    public CompletableFuture<OreProject> fetch(OreProjectReference projectRef) {
+        return enqueue(NetTasks.getProject(cm(), projectRef.getNamespace()));
     }
 
     /**
