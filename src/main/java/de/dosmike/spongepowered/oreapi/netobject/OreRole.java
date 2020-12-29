@@ -1,5 +1,9 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
+/**
+ * This reflects the ore enum for member roles.
+ * Enum values are created with the promise that value#name().equalsIgnoreCase(remoteName).
+ */
 public enum OreRole {
 
 	Ore_Admin,

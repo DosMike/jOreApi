@@ -9,24 +9,29 @@ import java.util.Locale;
  */
 public class OreCompactProjectFilter extends OrePaginationFilter {
 
+	/**
+	 * Used to define how to sort the projects in the result.
+	 * The default sorting is by the last update date (Updated).
+	 */
 	public enum Sort {
-		Stars, Downloads, Views, Newest,
-		/**
-		 * this is the default
-		 */
-		Updated, Only_Relevance, Recent_Downloads, Recent_Views
+		Stars, Downloads, Views, Newest, Updated, Only_Relevance, Recent_Downloads, Recent_Views
 	}
 
 	Sort sort = Sort.Updated;
 
 	public OreCompactProjectFilter() {
-
 	}
 
+	/**
+	 * @param sorting what order the projects should be returned in
+	 */
 	public void setSorting(Sort sorting) {
 		this.sort = sorting;
 	}
 
+	/**
+	 * @return what order the projects should be returned in
+	 */
 	public Sort getSorting() {
 		return sort;
 	}

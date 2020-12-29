@@ -6,6 +6,9 @@ import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 
 import java.io.Serializable;
 
+/**
+ * Contains information about the file associated with a project version
+ */
 public class OreFileInfo implements Serializable {
 
 	@FromJson("name")
@@ -19,14 +22,23 @@ public class OreFileInfo implements Serializable {
 		JsonUtil.fillSelf(this, object);
 	}
 
+	/**
+	 * @return the file name
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * @return the file size in bytes
+	 */
 	public long getByteSize() {
 		return byteSize;
 	}
 
+	/**
+	 * @return the files md5 hash for integrity checks
+	 */
 	public String getMd5() {
 		return md5;
 	}

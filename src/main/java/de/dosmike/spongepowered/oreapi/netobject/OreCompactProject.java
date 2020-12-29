@@ -41,31 +41,53 @@ public class OreCompactProject extends OreProjectReference {
 	@JsonTags("compact")
 	OreVisibility visibility;
 
+	/**
+	 * For OreProject that fills from a different json object
+	 */
 	protected OreCompactProject() {
 	}
 
+	/**
+	 * Create an instance from a compact project json object
+	 */
 	public OreCompactProject(JsonObject object) {
 		JsonUtil.fillSelf(this, object);
 		shadowNamespace = new OreNamespace(namespace.owner, namespace.slug);
 	}
 
 	//region getter
+
+	/**
+	 * @return the name of this project
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * @return a list of all promoted versions
+	 */
 	public OrePromotedVersion[] getPromotedVersions() {
 		return promotedVersions;
 	}
 
+	/**
+	 * @return the total stats for this project
+	 */
 	public OreProjectStatsAll getStats() {
 		return stats;
 	}
 
+	/**
+	 * @return the category this project is listen in
+	 */
 	public OreCategory getCategory() {
 		return category;
 	}
 
+	/**
+	 * @return the visibility of this project
+	 */
 	public OreVisibility getVisibility() {
 		return visibility;
 	}

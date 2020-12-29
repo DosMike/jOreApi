@@ -2,6 +2,10 @@ package de.dosmike.spongepowered.oreapi.netobject;
 
 import java.util.Locale;
 
+/**
+ * This reflects the ore enum for project visibility.
+ * Enum values are created with the promise that value#name().equalsIgnoreCase(remoteName).
+ */
 public enum OreVisibility {
 
 	Public, New, NeedsChanges, NeedsApproval, SoftDelete;

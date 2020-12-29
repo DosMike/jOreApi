@@ -18,10 +18,17 @@ public class OreMember implements Serializable {
 	}
 
 	//region getter
+
+	/**
+	 * @return the username for this user->role mapping
+	 */
 	public String getUsername() {
 		return username;
 	}
 
+	/**
+	 * @return the role information for this user
+	 */
 	public OreRoleInfo getRoleInfo() {
 		return role;
 	}
