@@ -10,10 +10,11 @@ import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import java.io.Serializable;
 import java.util.Locale;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
- * internal minimal project reference
+ * This equals the Membership Project structure but is used internally as a value-less
+ * reference to projects, giving minimal unique projects identifiers.
+ * This object can be used to fetch all project relevant data from the remote.
  */
 public class OreProjectReference implements Serializable {
 
@@ -26,7 +27,12 @@ public class OreProjectReference implements Serializable {
 	protected OreProjectReference() {
 	}
 
-	protected OreProjectReference(JsonObject object) {
+	/**
+	 * Create the project reference from a JsonObject. This is used for JsonUtil#fillSelf.
+	 *
+	 * @param object the json scoped into namespace information
+	 */
+	public OreProjectReference(JsonObject object) {
 		JsonUtil.fillSelf(this, object);
 	}
 
@@ -35,18 +41,36 @@ public class OreProjectReference implements Serializable {
 		this.namespace = new OreNamespace(project.namespace.owner, project.namespace.slug);
 	}
 
+	/**
+	 * @return the project reference from this object
+	 */
 	public OreProjectReference toReference() {
 		return new OreProjectReference(this);
 	}
 
+	/**
+	 * Note that the project id is phased out as identifier. While a plugin id will still be uniquely held by
+	 * a user in the future, the plan is to allow multiple plugins withing one project (jar).
+	 *
+	 * @return the unique project id
+	 */
 	public String getPluginId() {
 		return pluginId.toLowerCase(Locale.ROOT);
 	}
 
+	/**
+	 * @return the projects namespace on remote
+	 */
 	public OreNamespace getNamespace() {
 		return namespace;
 	}
 
+	/**
+	 * Access a different route from this project.
+	 * Most interesting uses are #with(api, Permissions.class) and #with(api, Members.class)
+	 *
+	 * @return a the target route with project information, if applicable
+	 */
 	public <T extends AbstractRoute> T with(OreApiV2 apiInstance, Class<T> route) {
 		if (Projects.class.isAssignableFrom(route)) {
 			return (T) apiInstance.projects();
@@ -60,20 +84,24 @@ public class OreProjectReference implements Serializable {
 		throw new IllegalArgumentException("The supplied Route is not supported by with");
 	}
 
+	/**
+	 * Access a different route from this project and applies the project to the functor.
+	 * Could be used like this #with(api, Projects.class, Projects::fetch)
+	 *
+	 * @return the result object for the specified route and functor
+	 */
 	public <T extends AbstractRoute, R> R with(OreApiV2 apiInstance, Class<T> route, BiFunction<T, OreProjectReference, R> function) {
 		return function.apply(with(apiInstance, route), this);
 	}
 
+	/**
+	 * Access a different route from this project.
+	 * Most interesting uses are #with(api, Permissions.class) and #with(api, Members.class)
+	 *
+	 * @return a the target route with project information, if applicable
+	 */
 	public <R> R with(OreApiV2 apiInstance, BiFunction<Projects, OreProjectReference, R> function) {
 		return function.apply(apiInstance.projects(), this);
-	}
-
-	public <T extends AbstractRoute, R> R with(OreApiV2 apiInstance, Class<T> route, Function<T, R> function) {
-		return function.apply(with(apiInstance, route));
-	}
-
-	public <R> R with(OreApiV2 apiInstance, Function<Projects, R> function) {
-		return function.apply(apiInstance.projects());
 	}
 
 	//Region builder

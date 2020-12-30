@@ -19,33 +19,59 @@ public class JsonUtil {
 
 		try {
 			boolean defaultConstructor = true;
-			Constructor constructor = null;
+			Constructor<T> constructor = null;
 			try {
 				constructor = elementClass.getConstructor(JsonObject.class);
 				constructor.setAccessible(true);
 				defaultConstructor = false;
 			} catch (NoSuchMethodException e) {
 			}
-			constructor = elementClass.getConstructor();
-			if ((constructor.getModifiers() & Modifier.PRIVATE) == 0) {
-				throw new IllegalAccessException("Default constructor is private");
+			if (constructor == null)
+				constructor = elementClass.getConstructor();
+			if ((constructor.getModifiers() & Modifier.PRIVATE) != 0) {
+				throw new IllegalAccessException("Default constructor for \"" + elementClass.getSimpleName() + "\" is private");
 			}
 
 			for (int i = 0; i < source.size(); i++) {
 				T element;
 				if (defaultConstructor) {
-					element = (T) constructor.newInstance();
+					element = constructor.newInstance();
 					fillSelf(element, source.get(i).getAsJsonObject());
 				} else {
-					element = (T) constructor.newInstance(source.get(i).getAsJsonObject());
+					element = constructor.newInstance(source.get(i).getAsJsonObject());
 				}
 				Array.set(array, i, element);
 			}
 		} catch (IllegalAccessException | NoSuchMethodException | InstantiationException | InvocationTargetException e) {
-
+			e.printStackTrace();
 		}
 
 		return array;
+	}
+
+	private static <T> T newInstance(JsonObject object, Class<T> elementClass) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+		boolean defaultConstructor = true;
+		Constructor<T> constructor = null;
+		try {
+			constructor = elementClass.getConstructor(JsonObject.class);
+			constructor.setAccessible(true);
+			defaultConstructor = false;
+		} catch (NoSuchMethodException e) {
+		}
+		if (constructor == null)
+			constructor = elementClass.getConstructor();
+		if ((constructor.getModifiers() & Modifier.PRIVATE) != 0) {
+			throw new IllegalAccessException("Default constructor for \"" + elementClass.getSimpleName() + "\" is private");
+		}
+
+		T element;
+		if (defaultConstructor) {
+			element = constructor.newInstance();
+			fillSelf(element, object.getAsJsonObject());
+		} else {
+			element = constructor.newInstance(object.getAsJsonObject());
+		}
+		return element;
 	}
 
 	public static void fillSelf(Object instance, JsonObject source) {
@@ -70,13 +96,16 @@ public class JsonUtil {
 					if (!jchild.isJsonObject()) jchild = null;
 					else jchild = jchild.getAsJsonObject().get(pelem[i]);
 				}
-				if (!j.optional() && (jchild == null || jchild.isJsonNull())) {
-					throw new RuntimeException("Missing non-optional field '" + j.value() + "'");
-				}
-				if (elementType.isArray() && !jchild.isJsonArray()) {
-					throw new RuntimeException("Expected array where non-array json element supplied at '" + j.value() + "'");
-				} else if (!elementType.isArray() && jchild.isJsonArray()) {
-					throw new RuntimeException("Expected non-array where array json element supplied at '" + j.value() + "'");
+				if (jchild == null || jchild.isJsonNull()) {
+					if (!j.optional()) {
+						throw new RuntimeException("Missing non-optional field '" + j.value() + "'");
+					}
+				} else {
+					if (elementType.isArray() && !jchild.isJsonArray()) {
+						throw new RuntimeException("Expected array where non-array json element supplied at '" + j.value() + "'");
+					} else if (!elementType.isArray() && jchild.isJsonArray()) {
+						throw new RuntimeException("Expected non-array where array json element supplied at '" + j.value() + "'");
+					}
 				}
 
 				boolean asArray = false;
@@ -204,19 +233,17 @@ public class JsonUtil {
 		}
 	}
 
-	private static <T extends Object> T parserOptObject(JsonElement element, Class<T> tClass) {
-		if (element == null || element.isJsonNull() || !(element instanceof JsonObject)) {
+	private static <T> T parserOptObject(JsonElement element, Class<T> tClass) {
+		if (element == null || element.isJsonNull() || !element.isJsonObject()) {
 			return null;
 		} else {
 			try {
-				Constructor<T> constructor = tClass.getConstructor(JsonObject.class);
-				constructor.setAccessible(true);
-				return constructor.newInstance(element);
+				return newInstance(element.getAsJsonObject(), tClass);
 			} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
 				if (e.getCause() != null) {
-					throw new RuntimeException(e.getMessage(), e.getCause());
+					throw new RuntimeException(e.getClass().getSimpleName() + ": " + e.getMessage(), e.getCause());
 				} else {
-					throw new RuntimeException(e.getMessage(), e);
+					throw new RuntimeException("See " + e.getClass().getSimpleName(), e);
 				}
 			}
 		}

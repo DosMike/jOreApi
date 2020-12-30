@@ -7,14 +7,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * Wrapper for list results that do not own pagination information although
  * accepting limit and offset parameters.
  * This wraps a json array into a list of parsed objects.
  */
-public class HeadlessPaginationList<T> implements Supplier<List<T>>, Serializable {
+public class HeadlessPaginationList<T> implements Serializable {
 
 	final private T[] elements;
 
@@ -31,8 +30,7 @@ public class HeadlessPaginationList<T> implements Supplier<List<T>>, Serializabl
 	/**
 	 * @return the all entries in the response as list
 	 */
-	@Override
-	public List<T> get() {
+	public List<T> getResult() {
 		return new ArrayList<>(Arrays.asList(elements));
 	}
 }

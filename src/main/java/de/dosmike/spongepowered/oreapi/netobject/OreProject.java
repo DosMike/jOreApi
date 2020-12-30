@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.utility.*;
 
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 public class OreProject extends OreCompactProject {
@@ -35,28 +36,51 @@ public class OreProject extends OreCompactProject {
 	@FromJson("icon_url")
 	String urlIcon;
 
+	/**
+	 * Create the project from a JsonObject. This is used for JsonUtil#fillSelf.
+	 *
+	 * @param object the json scoped into namespace information
+	 */
 	public OreProject(JsonObject object) {
 		JsonUtil.fillSelf(this, object);
 		shadowNamespace = new OreNamespace(namespace.owner, namespace.slug);
 	}
 
 	//region getter
+
+	/**
+	 * @return the instance this project was created at as unix timestamp in milliseconds
+	 * @see Date#getTime()
+	 */
 	public long getCreatedAt() {
 		return createdAt;
 	}
 
+	/**
+	 * @return this projects descriptive summary (&lt;= 120 characters)
+	 */
 	public String getSummary() {
 		return summary;
 	}
 
+	/**
+	 * @return the instance this project was last updated as unix timestamp in milliseconds
+	 * @see Date#getTime()
+	 */
 	public long getLastUpdate() {
 		return lastUpdate;
 	}
 
+	/**
+	 * @return the settings information for this projects
+	 */
 	public OreProjectSettings getSettings() {
 		return settings;
 	}
 
+	/**
+	 * @return the url used to fetch this projects listing icon
+	 */
 	public String getUrlIcon() {
 		return urlIcon;
 	}

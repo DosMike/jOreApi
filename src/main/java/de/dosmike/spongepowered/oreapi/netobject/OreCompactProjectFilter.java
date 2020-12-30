@@ -20,6 +20,11 @@ public class OreCompactProjectFilter extends OrePaginationFilter {
 	Sort sort = Sort.Updated;
 
 	public OreCompactProjectFilter() {
+		super();
+	}
+
+	public OreCompactProjectFilter(int limit, int offset) {
+		super(limit, offset);
 	}
 
 	/**

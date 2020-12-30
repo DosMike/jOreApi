@@ -3,6 +3,7 @@ package de.dosmike.spongepowered.oreapi.netobject;
 import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 
@@ -21,9 +22,10 @@ public class OrePagination<F extends OrePaginationFilter> implements Serializabl
 	/**
 	 * This is the filter that was used to obtain the result holding this pagination
 	 */
+	@NotNull
 	F filter;
 
-	public OrePagination(JsonObject object, F filterBase) {
+	public OrePagination(JsonObject object, @NotNull F filterBase) {
 		this.filter = filterBase;
 		JsonUtil.fillSelf(this, object);
 	}

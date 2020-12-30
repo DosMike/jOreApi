@@ -19,10 +19,10 @@ public class OreVersionReference implements Serializable {
     @FromJson("name")
     protected String name;
 
-    OreVersionReference() {
+    protected OreVersionReference() {
     }
 
-    OreVersionReference(OreVersionReference version) {
+    private OreVersionReference(OreVersionReference version) {
         project = version.getProjectRef();
         name = getName();
     }

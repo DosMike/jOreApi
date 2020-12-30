@@ -41,9 +41,6 @@ public class OreCompactProject extends OreProjectReference {
 	@JsonTags("compact")
 	OreVisibility visibility;
 
-	/**
-	 * For OreProject that fills from a different json object
-	 */
 	protected OreCompactProject() {
 	}
 

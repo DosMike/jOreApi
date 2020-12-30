@@ -17,15 +17,29 @@ public class OreOrganization implements Serializable {
     @FromJson("user")
     OreUser user;
 
+    /**
+     * Create the organization from a JsonObject. This is used for JsonUtil#fillSelf.
+     *
+     * @param json the json scoped into namespace information
+     */
     public OreOrganization(JsonObject json) {
         JsonUtil.fillSelf(this, json);
     }
 
     //region getter
+
+    /**
+     * @return the name of owner of this organization
+     */
     public String getOwner() {
         return owner;
     }
 
+    /**
+     * TODO: what is this user? the owner user object, or a user representation of this organization?
+     *
+     * @return a user
+     */
     public OreUser getUser() {
         return user;
     }

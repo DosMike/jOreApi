@@ -35,27 +35,52 @@ public class OrePaginationFilter implements Serializable, Cloneable {
 		return new OrePaginationFilter(limit, offset);
 	}
 
+	/**
+	 * Set this page using natural counting as offset.
+	 * As the pagination filter has no knowledge of total possible results, there's no upper limit enforced here.
+	 *
+	 * @param page the page to jump to
+	 * @throws IllegalArgumentException if the page value is zero or negative
+	 */
 	public void setPage(int page) {
 		if (page < 1) throw new IllegalArgumentException("Page has to be positive integer");
 		int offset = (page - 1) * limit;
 	}
 
+	/**
+	 * Breaks down the current offset and limit into a natural counted page number.
+	 *
+	 * @return the page of results this filter will return.
+	 */
 	public int getPage() {
 		return (offset / limit) + 1;
 	}
 
+	/**
+	 * Convenience method for setPage(getPage()+1), that increments the offset by limit once
+	 */
 	public void incrementPage() {
 		offset += limit;
 	}
 
+	/**
+	 * Convenience method for setPage(getPage()-1), that decrements the offset by limit once.
+	 * This method does not throw, but simply does not decrement below page 1.
+	 */
 	public void decrementPage() {
 		offset = Math.max(0, offset - limit);
 	}
 
+	/**
+	 * @return the maximum number of results to return per page
+	 */
 	public int getLimit() {
 		return limit;
 	}
 
+	/**
+	 * @return the offset into the result set as the first element to return
+	 */
 	public int getOffset() {
 		return offset;
 	}

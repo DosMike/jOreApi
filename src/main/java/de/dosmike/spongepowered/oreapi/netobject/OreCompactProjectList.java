@@ -9,6 +9,6 @@ public class OreCompactProjectList extends OreResultList<OreCompactProject, OreC
 	}
 
 	public OreCompactProjectList(JsonObject object, Class<OreCompactProject> resultClass, OreCompactProjectFilter previousFilter) {
-		super(object, resultClass, previousFilter);
+		super(object, resultClass, previousFilter == null ? new OreCompactProjectFilter() : previousFilter);
 	}
 }

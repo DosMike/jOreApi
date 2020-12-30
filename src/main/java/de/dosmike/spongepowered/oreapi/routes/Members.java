@@ -27,7 +27,7 @@ public abstract class Members extends AbstractRoute {
 
     /**
      * Updates the member list for this object. Keep in mind that you have to send the whole list.
-     * If you need to create the list, use {@link OreMemberList#forPosting()}
+     * If you need to create the list, use {@link OreMemberList#forPosting()}<br>
      * Keep in mind that a changed role is more like an invite and has to be accepted by the other party.
      *
      * @param roles a username -&gt; role mapping

@@ -2,6 +2,7 @@ package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -40,7 +41,7 @@ public class OreResultList<T, F extends OrePaginationFilter> implements Serializ
 	 * @param resultClass    the element class for the result list
 	 * @param previousFilter the filter to use as base for pagination
 	 */
-	public OreResultList(JsonObject object, Class<T> resultClass, F previousFilter) {
+	public OreResultList(JsonObject object, Class<T> resultClass, @NotNull F previousFilter) {
 		this(object, previousFilter);
 		lateParse(object, resultClass);
 	}
@@ -54,7 +55,7 @@ public class OreResultList<T, F extends OrePaginationFilter> implements Serializ
 	 * @param object         the Pagination json object
 	 * @param previousFilter the filter to use as base for pagination
 	 */
-	public OreResultList(JsonObject object, F previousFilter) {
+	public OreResultList(JsonObject object, @NotNull F previousFilter) {
 		pagination = new OrePagination<>(object.get("pagination").getAsJsonObject(), previousFilter);
 	}
 

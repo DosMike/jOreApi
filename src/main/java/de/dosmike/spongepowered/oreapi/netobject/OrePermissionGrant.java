@@ -18,31 +18,66 @@ public class OrePermissionGrant extends HashSet<OrePermission> {
         super();
     }
 
+    /**
+     * Construct a permission grant from an arbitrary collection of permissions.
+     * All passed permissions will be assumed to be granted.
+     */
     public OrePermissionGrant(@NotNull Collection<? extends OrePermission> c) {
         super(c);
     }
 
+    /**
+     * Create the premission grant from a JsonObject. This is used for JsonUtil#fillSelf.
+     *
+     * @param object the json scoped into namespace information
+     */
     public OrePermissionGrant(JsonObject object) {
         List<OrePermission> perms = new LinkedList<>();
         object.get("permissions").getAsJsonArray().forEach(e -> perms.add(OrePermission.fromString(e.getAsString())));
         addAll(perms);
     }
 
+    /**
+     * Run some code if and only if all permissions passed to this method are granted with this permission grant
+     *
+     * @param r        the code to execute
+     * @param required the permission required for execution
+     */
     public void ifContainsAll(Runnable r, OrePermission... required) {
         if (containsAll(Arrays.asList(required))) r.run();
     }
 
+    /**
+     * Run some code if and only if all permissions passed to this method are granted with this permission grant
+     *
+     * @param s        the code to execute
+     * @param required the permission required for execution
+     * @return the return value, if the code executed
+     */
     public <T> Optional<T> ifContainsAll(Supplier<T> s, OrePermission... required) {
         if (containsAll(Arrays.asList(required))) return Optional.of(s.get());
         return Optional.empty();
     }
 
+    /**
+     * Run some code if this permission grants at least one permission in the passed set of permissions
+     *
+     * @param r        the code to run
+     * @param required the set of permissions to find in this grant
+     */
     public void ifContainsAny(Runnable r, OrePermission... required) {
         for (OrePermission p : required)
             if (contains(p))
                 r.run();
     }
 
+    /**
+     * Run some code if this permission grants at least one permission in the passed set of permissions
+     *
+     * @param s        the code to run
+     * @param required the set of permissions to find in this grant
+     * @return the return value, if the code executed
+     */
     public <T> Optional<T> ifContainsAny(Supplier<T> s, OrePermission... required) {
         for (OrePermission p : required)
             if (contains(p))
