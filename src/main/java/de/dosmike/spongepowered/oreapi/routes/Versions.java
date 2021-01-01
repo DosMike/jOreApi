@@ -83,7 +83,7 @@ public class Versions extends AbstractRoute {
      * Please note that the resulting version is not cached for obvious reason.
      *
      * @param project the project to scan this for for context
-     * @param file the file to scan
+     * @param file    the file to scan
      * @return a OreVersion for inspection
      */
     public CompletableFuture<OreVersion> scan(OreProjectReference project, Path file) {
@@ -143,10 +143,10 @@ public class Versions extends AbstractRoute {
      * Anyhow, this requests the visibility of the version being changed on the remote, followed by updating the
      * cached version object if successful and present
      *
-     * @param version the version to update
+     * @param version    the version to update
      * @param visibility this will be the new visibility for this project
      * @param comment    The api allows you to specify a reason for why you changed the visibility
-     * @param <T> the version reference class
+     * @param <T>        the version reference class
      * @return the updated version for chaining/updating
      */
     public <T extends OreVersionReference> CompletableFuture<T> visibility(T version, OreVisibility visibility, String comment) {
@@ -159,6 +159,7 @@ public class Versions extends AbstractRoute {
      * unsafe and that neither you or the SpongePowered Team is responsible for any damages
      * resulting from the user continuing.
      * THIS IS NOT PART OF THE API (but i include it anyway, because that might be a common goal)
+     *
      * @param version the version to get the asset download url for
      * @return the download url
      */

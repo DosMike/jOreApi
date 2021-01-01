@@ -16,7 +16,6 @@ import java.util.logging.Logger;
  */
 public class RateLimiter extends Thread {
 
-	private boolean running = true;
 	private final List<CompletableTask<?>> tasks = new LinkedList<>();
 	private final Object taskMutex = new Object();
 	private final List<Runnable> onIdleCallbacks = new LinkedList<>();
@@ -24,6 +23,7 @@ public class RateLimiter extends Thread {
 	private final Object idleMutex = new Object();
 	private final Limiter limit;
 	private final ExecutorService exec = Executors.newFixedThreadPool(1, new TracingThreadFactory());
+	private boolean running = true;
 
 	public RateLimiter(Limiter limiter) {
 		this.limit = limiter;

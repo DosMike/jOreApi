@@ -27,6 +27,7 @@ public class Users extends AbstractRoute {
 
     /**
      * Get the user object for the user represented by the current session
+     *
      * @return user
      */
     public CompletableFuture<OreUser> self() {

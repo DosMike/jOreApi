@@ -18,12 +18,24 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class Permissions extends AbstractRoute {
 
+    private String query;
+
     private Permissions(OreApiV2 api, String query) {
         super(api);
         this.query = query;
     }
 
-    private String query;
+    public static Global global(OreApiV2 api) {
+        return new Global(api);
+    }
+
+    public static Namespaced namespace(OreApiV2 api, OreNamespace namespace) {
+        return new Namespaced(api, namespace);
+    }
+
+    public static Organisation organisation(OreApiV2 api, String organisation) {
+        return new Organisation(api, organisation);
+    }
 
     public CompletableFuture<OrePermissionGrant> get() {
         return enqueue(NetTasks.getPermissions(cm(), query));
@@ -53,18 +65,6 @@ public abstract class Permissions extends AbstractRoute {
         private Organisation(OreApiV2 api, String organisation) {
             super(api, "organizationName=" + urlencoded(organisation));
         }
-    }
-
-    public static Global global(OreApiV2 api) {
-        return new Global(api);
-    }
-
-    public static Namespaced namespace(OreApiV2 api, OreNamespace namespace) {
-        return new Namespaced(api, namespace);
-    }
-
-    public static Organisation organisation(OreApiV2 api, String organisation) {
-        return new Organisation(api, organisation);
     }
 
 }

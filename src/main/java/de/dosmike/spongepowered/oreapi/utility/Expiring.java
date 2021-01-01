@@ -55,6 +55,7 @@ public class Expiring<T> implements Serializable {
 
 	/**
 	 * get this object, if it has not yet expired. otherwise other is supplied
+	 *
 	 * @param other the supplier to execute if the actual value expired
 	 * @return a value
 	 */
@@ -64,6 +65,7 @@ public class Expiring<T> implements Serializable {
 
 	/**
 	 * applies consumer to object only if the object has not yet expired
+	 *
 	 * @param consumer a function consuming this value, if alive
 	 */
 	public void ifAlive(Consumer<T> consumer) {
@@ -94,7 +96,7 @@ public class Expiring<T> implements Serializable {
 	 *
 	 * @param object a time limited object
 	 * @param timeAt the unix timestamp in ms at which this object expires
-	 * @param <Y> wrapped element type
+	 * @param <Y>    wrapped element type
 	 * @return the new expiring value
 	 */
 	public static <Y> Expiring<Y> expireAt(Y object, long timeAt) {

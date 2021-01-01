@@ -13,12 +13,12 @@ public class Pair<K, V> {
 		return k;
 	}
 
-	public V getSecond() {
-		return v;
-	}
-
 	public void setFirst(K value) {
 		k = value;
+	}
+
+	public V getSecond() {
+		return v;
 	}
 
 	public void setSecond(V value) {

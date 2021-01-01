@@ -134,10 +134,10 @@ public class Projects extends AbstractRoute {
      * <li>{@link OreVisibility#SoftDelete} requires {@link OrePermission#Delete_Project}</li>
      * </ul>
      *
-     * @param project the project to update
+     * @param project    the project to update
      * @param visibility this will be the new visibility for this project
      * @param comment    The api allows you to specify a reason for why you changed the visibility
-     * @param <T> the project reference class
+     * @param <T>        the project reference class
      * @return the project for chaining/updating
      */
     public <T extends OreProjectReference> CompletableFuture<T> visibility(T project, OreVisibility visibility, String comment) {

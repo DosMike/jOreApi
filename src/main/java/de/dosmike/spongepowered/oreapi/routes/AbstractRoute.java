@@ -19,16 +19,16 @@ public abstract class AbstractRoute {
         this.api = api;
     }
 
-    protected <T> CompletableFuture<T> enqueue(Supplier<T> task) {
-        return ConnectionManager.enqueue(task);
-    }
-
     protected static String urlencoded(String s) {
         try {
             return URLEncoder.encode(s, "UTF-8");
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected <T> CompletableFuture<T> enqueue(Supplier<T> task) {
+        return ConnectionManager.enqueue(task);
     }
 
     protected ConnectionManager cm() {

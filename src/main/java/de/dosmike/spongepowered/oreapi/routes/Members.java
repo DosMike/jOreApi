@@ -17,12 +17,12 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class Members extends AbstractRoute {
 
+    // allows for convenience methods to one-call change members on remotes
+    protected Map<String, OreRole> memberRoles = null;
+
     private Members(OreApiV2 api) {
         super(api);
     }
-
-    // allows for convenience methods to one-call change members on remotes
-    protected Map<String, OreRole> memberRoles = null;
 
     /**
      * Retrieve the current list of members for this object with additional role information.
