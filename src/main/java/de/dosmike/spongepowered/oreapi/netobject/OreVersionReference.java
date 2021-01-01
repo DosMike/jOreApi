@@ -33,10 +33,20 @@ public class OreVersionReference implements Serializable {
     }
 
     //region getter
+
+    /**
+     * Minor note: The project reference will be invalid, if the project's owner or project name changed.
+     *
+     * @return the project this version was bound to
+     * @see OreProject#update(OreApiV2)
+     */
     public OreProjectReference getProjectRef() {
         return project;
     }
 
+    /**
+     * @return the version name
+     */
     public String getName() {
         return name;
     }

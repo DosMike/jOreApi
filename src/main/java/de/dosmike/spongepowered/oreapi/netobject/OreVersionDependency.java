@@ -17,6 +17,12 @@ public class OreVersionDependency implements Serializable {
 		JsonUtil.fillSelf(this, object);
 	}
 
+	/**
+	 * Please note that dependencies are not required to be hosted on ore.
+	 * For this reason you might not be able to find this project through the api.
+	 *
+	 * @return the project id that this plugin depends on
+	 */
 	public String getPluginId() {
 		return pluginId;
 	}
