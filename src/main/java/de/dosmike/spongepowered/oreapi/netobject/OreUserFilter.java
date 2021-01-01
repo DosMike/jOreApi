@@ -39,56 +39,104 @@ public class OreUserFilter extends OrePaginationFilter {
 		this.query = searchQuery;
 	}
 
-	public Optional<String> getQuery() {
-		return Optional.ofNullable(query);
+	/**
+	 * @return the name to query for, or null if not set
+	 */
+	public String getQuery() {
+		return query;
 	}
 
+	/**
+	 * @return the amount of projects a user needs, to be included in the search result
+	 */
 	public int getMinProjects() {
 		return minProjects;
 	}
 
+	/**
+	 * @param minProjects the amount of projects a user needs, to be included in the search result
+	 */
 	public void setMinProjects(int minProjects) {
 		if (minProjects < 0)
 			throw new IllegalArgumentException("Minimum Project count cannot be negative");
 		this.minProjects = minProjects;
 	}
 
+	/**
+	 * Clear any role requirement for users in this search
+	 */
 	public void clearRoles() {
 		this.roles.clear();
 	}
 
+	/**
+	 * Add role requirements to this search. Only users with these roles will be returned
+	 *
+	 * @param roles roles to add
+	 */
 	public void addRoles(OreRole... roles) {
 		this.roles.addAll(Arrays.asList(roles));
 	}
 
+	/**
+	 * Remove role requirements from this search. Only users with these roles will be returned
+	 *
+	 * @param roles roles to remove
+	 */
 	public void removeRoles(OreRole... roles) {
 		this.roles.removeAll(Arrays.asList(roles));
 	}
 
+	/**
+	 * Get a mutable set of roles required on users. Only users with these roles will be returned.
+	 *
+	 * @return the set of roles
+	 */
 	public Set<OreRole> getRoles() {
 		return roles;
 	}
 
+	/**
+	 * @return true if organizations are allowed to be returned as users with your search
+	 */
 	public boolean isExcludingOrganizations() {
 		return excludeOrganizations;
 	}
 
+	/**
+	 * Since organizations work like users in many ways, you can search users with this as well.
+	 * If you don't want organizations in your result set, you can set this to true.
+	 *
+	 * @param excludeOrganizations true if you only want real users
+	 */
 	public void doExcludeOrganizations(boolean excludeOrganizations) {
 		this.excludeOrganizations = excludeOrganizations;
 	}
 
+	/**
+	 * @return the current sort order for your results
+	 */
 	public Sort getSort() {
 		return sort;
 	}
 
+	/**
+	 * @param sort set the order in which to return your results
+	 */
 	public void setSort(Sort sort) {
 		this.sort = sort;
 	}
 
+	/**
+	 * @return true if the result will be sorted descending
+	 */
 	public boolean isSortingDescending() {
 		return sortDescending;
 	}
 
+	/**
+	 * @param sortDescending true if you want the results to be sorted descending
+	 */
 	public void doSortDescending(boolean sortDescending) {
 		this.sortDescending = sortDescending;
 	}
