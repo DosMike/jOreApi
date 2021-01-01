@@ -189,6 +189,8 @@ public class OreDeployVersionInfo implements Serializable {
     /**
      * Create the data container for a new version to be added to a project<br>
      * You should submit this using <tt>api.projects().versions().create()</tt>.
+     *
+     * @return the builder
      */
     public static Builder builder() {
         return new Builder();

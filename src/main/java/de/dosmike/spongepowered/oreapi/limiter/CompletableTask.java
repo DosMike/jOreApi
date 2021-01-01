@@ -51,6 +51,8 @@ public class CompletableTask<T> implements Runnable {
 
 	/**
 	 * Sends away an exception that occurred during execution.
+	 *
+	 * @param t the exception to notify
 	 */
 	public void notifyOwnerExceptional(Throwable t) {
 		userExposed.completeExceptionally(t);

@@ -12,14 +12,14 @@ public class OreMemberList extends HeadlessPaginationList<OreMember> {
 	}
 
 	/**
-	 * Converts this list in to a map of username -> role enum.
+	 * Converts this list in to a map of username -&gt; role enum.
 	 * This mapping can be changed and subsequently used for updating member roles.
 	 *
-	 * @return username -> role mapping
+	 * @return username -&gt; role mapping
 	 */
 	public Map<String, OreRole> forPosting() {
 		Map<String, OreRole> currentMembers = new HashMap<>();
-		get().forEach(m -> currentMembers.put(m.getUsername(), m.getRoleInfo().getRole()));
+		getResult().forEach(m -> currentMembers.put(m.getUsername(), m.getRoleInfo().getRole()));
 		return currentMembers;
 	}
 

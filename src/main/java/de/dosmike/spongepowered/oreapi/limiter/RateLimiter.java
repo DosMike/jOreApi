@@ -94,6 +94,10 @@ public class RateLimiter extends Thread {
 	/**
 	 * Enqueues a task as CompletableTask that awaits execution.
 	 * Returns the CompletableFuture that will receive results.
+	 *
+	 * @param task the task to enqueue
+	 * @param <T>  the return type
+	 * @return the task result
 	 */
 	public <T> CompletableFuture<T> enqueue(Supplier<T> task) {
 		if (!isAlive()) throw new IllegalStateException("The rate limiter has already terminated");

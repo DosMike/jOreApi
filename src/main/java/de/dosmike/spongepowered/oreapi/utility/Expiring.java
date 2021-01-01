@@ -45,6 +45,9 @@ public class Expiring<T> implements Serializable {
 
 	/**
 	 * get this object, if it has not yet expired. otherwise other is returned
+	 *
+	 * @param other the value to return if the actual value expired
+	 * @return a value
 	 */
 	public T orElse(T other) {
 		return isExpired() ? other : value;
@@ -52,6 +55,8 @@ public class Expiring<T> implements Serializable {
 
 	/**
 	 * get this object, if it has not yet expired. otherwise other is supplied
+	 * @param other the supplier to execute if the actual value expired
+	 * @return a value
 	 */
 	public T orElseGet(Supplier<T> other) {
 		return isExpired() ? other.get() : value;
@@ -59,6 +64,7 @@ public class Expiring<T> implements Serializable {
 
 	/**
 	 * applies consumer to object only if the object has not yet expired
+	 * @param consumer a function consuming this value, if alive
 	 */
 	public void ifAlive(Consumer<T> consumer) {
 		if (isAlive()) consumer.accept(value);
@@ -88,6 +94,8 @@ public class Expiring<T> implements Serializable {
 	 *
 	 * @param object a time limited object
 	 * @param timeAt the unix timestamp in ms at which this object expires
+	 * @param <Y> wrapped element type
+	 * @return the new expiring value
 	 */
 	public static <Y> Expiring<Y> expireAt(Y object, long timeAt) {
 		return new Expiring<>(object, timeAt - System.currentTimeMillis());
@@ -98,19 +106,33 @@ public class Expiring<T> implements Serializable {
 	 *
 	 * @param object   a time limited object
 	 * @param lifespan the time in ms after which this object expires
+	 * @param <Y>      wrapped element type
+	 * @return the new expiring value
 	 */
 	public static <Y> Expiring<Y> expireIn(Y object, long lifespan) {
 		return new Expiring<>(object, lifespan);
 	}
 
+	/**
+	 * Create an empty auto expired value.
+	 *
+	 * @param <Y> auto element type
+	 * @return an expired Expiring
+	 */
 	public static <Y> Expiring<Y> expired() {
 		return new Expiring<>();
 	}
 
+	/**
+	 * @return the exact moment this value expires in epoch ms
+	 */
 	public long getExpirationDate() {
 		return expirationDate;
 	}
 
+	/**
+	 * @return the remaining lifetime in ms
+	 */
 	public long getRemainingLifespan() {
 		return Math.min(0, expirationDate - System.currentTimeMillis());
 	}

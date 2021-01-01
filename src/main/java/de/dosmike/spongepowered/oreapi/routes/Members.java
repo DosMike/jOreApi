@@ -28,6 +28,8 @@ public abstract class Members extends AbstractRoute {
      * Retrieve the current list of members for this object with additional role information.
      * You will only see accepted roles unless you have {@link OrePermission#Manage_Subject_Members}
      * To update member roles call {@link OreMemberList#forPosting()} to get the mapping.
+     *
+     * @return the member list
      */
     public abstract CompletableFuture<OreMemberList> get();
 
@@ -37,6 +39,7 @@ public abstract class Members extends AbstractRoute {
      * Keep in mind that a changed role is more like an invite and has to be accepted by the other party.
      *
      * @param roles a username -&gt; role mapping
+     * @return nothing
      */
     public abstract CompletableFuture<Void> set(Map<String, OreRole> roles);
 

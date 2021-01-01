@@ -21,6 +21,8 @@ public class Versions extends AbstractRoute {
     }
 
     /**
+     * @param project    project
+     * @param pagination pagination
      * @return empty if the connection failed or no such plugin exists
      */
     public CompletableFuture<OreVersionList> list(OreProjectReference project, @Nullable OrePaginationFilter pagination) {
@@ -33,6 +35,7 @@ public class Versions extends AbstractRoute {
      * If you don't want to use the cache and to get a fresh instance of this object,
      * try {@link #fetch(OreVersionReference)} instead.
      *
+     * @param version the version
      * @return empty if the connection failed or no such plugin or version exists
      */
     public CompletableFuture<OreVersion> get(OreVersionReference version) {
@@ -50,6 +53,7 @@ public class Versions extends AbstractRoute {
      * Best usage is probably using something along the lines of
      * <code>OreVersion#with(OreApiV2, Versions::fetch)</code>
      *
+     * @param version the version
      * @return empty if the connection failed or no such plugin or version exists
      */
     public CompletableFuture<OreVersion> fetch(OreVersionReference version) {
@@ -63,6 +67,7 @@ public class Versions extends AbstractRoute {
      * To see if the changelog was already fetched, check OreVersion#getChangelog for a non-null value.
      * If the plugin referenced by the version is no longer cached it will be updated and cached again.
      *
+     * @param version the version
      * @return empty on error, or if no changelog is available
      */
     public CompletableFuture<String> changelog(OreVersionReference version) {
@@ -77,6 +82,7 @@ public class Versions extends AbstractRoute {
      * assign the file. Requires the {@link OrePermission#Create_Version} in the project or owning organization.<br>
      * Please note that the resulting version is not cached for obvious reason.
      *
+     * @param project the project to scan this for for context
      * @param file the file to scan
      * @return a OreVersion for inspection
      */
@@ -113,6 +119,7 @@ public class Versions extends AbstractRoute {
      * It is in fact so permanent, that a new version with the same name may not be created unless unlocked by an admin.
      *
      * @param version the version to delete
+     * @return nothing
      */
     public CompletableFuture<Void> delete(OreVersionReference version) {
         return enqueue(NetTasks.deleteVersion(cm(), version));
@@ -124,6 +131,7 @@ public class Versions extends AbstractRoute {
      * @param version the version to query
      * @param from    the first day to query (inclusive)
      * @param to      the last day to query (inclusive)
+     * @return stats
      */
     public CompletableFuture<Map<Date, OreVersionStatsDay>> stats(OreVersionReference version, Date from, Date to) {
         return enqueue(NetTasks.getVersionStats(cm(), version, from, to));
@@ -135,8 +143,11 @@ public class Versions extends AbstractRoute {
      * Anyhow, this requests the visibility of the version being changed on the remote, followed by updating the
      * cached version object if successful and present
      *
+     * @param version the version to update
      * @param visibility this will be the new visibility for this project
      * @param comment    The api allows you to specify a reason for why you changed the visibility
+     * @param <T> the version reference class
+     * @return the updated version for chaining/updating
      */
     public <T extends OreVersionReference> CompletableFuture<T> visibility(T version, OreVisibility visibility, String comment) {
         return enqueue(NetTasks.updateVersionVisibility(cm(), version, visibility, comment));
@@ -148,6 +159,8 @@ public class Versions extends AbstractRoute {
      * unsafe and that neither you or the SpongePowered Team is responsible for any damages
      * resulting from the user continuing.
      * THIS IS NOT PART OF THE API (but i include it anyway, because that might be a common goal)
+     * @param version the version to get the asset download url for
+     * @return the download url
      */
     public CompletableFuture<URL> downloadUrl(OreVersion version) {
         return enqueue(NetTasks.getDownloadURL(cm(), version));

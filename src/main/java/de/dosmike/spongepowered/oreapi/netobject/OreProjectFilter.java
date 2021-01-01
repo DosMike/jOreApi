@@ -187,7 +187,8 @@ public class OreProjectFilter extends OreCompactProjectFilter {
 	 * Filters the currently set platform versions for the provided name and returns a set formatted
 	 * like name:version. If no version is specified the entry equals the name and matches any version.
 	 *
-	 * @return all platform entries with the given name . Has to match \w+
+	 * @param name Has to match \w+
+	 * @return all platform entries with the given name.
 	 */
 	public Set<String> getPlatformVersions(String name) {
 		if (name == null || !name.matches("^\\w+$"))

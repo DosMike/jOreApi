@@ -21,6 +21,8 @@ public class OrePermissionGrant extends HashSet<OrePermission> {
     /**
      * Construct a permission grant from an arbitrary collection of permissions.
      * All passed permissions will be assumed to be granted.
+     *
+     * @param c the collection of permissions granted
      */
     public OrePermissionGrant(@NotNull Collection<? extends OrePermission> c) {
         super(c);
@@ -52,6 +54,7 @@ public class OrePermissionGrant extends HashSet<OrePermission> {
      *
      * @param s        the code to execute
      * @param required the permission required for execution
+     * @param <T> type of your codes return value
      * @return the return value, if the code executed
      */
     public <T> Optional<T> ifContainsAll(Supplier<T> s, OrePermission... required) {
@@ -76,6 +79,7 @@ public class OrePermissionGrant extends HashSet<OrePermission> {
      *
      * @param s        the code to run
      * @param required the set of permissions to find in this grant
+     * @param <T> type of your codes return value
      * @return the return value, if the code executed
      */
     public <T> Optional<T> ifContainsAny(Supplier<T> s, OrePermission... required) {

@@ -34,22 +34,21 @@ public class OreRoleInfo implements Serializable {
 	}
 
 	/**
-	 * Human readable version of the OreRole
+	 * @return human readable version of the OreRole
 	 */
 	public String getTitle() {
 		return title;
 	}
 
 	/**
-	 * The role color seems to be a web-safe color name. Non-moderation users seem to get the
-	 * color "transparent"
+	 * @return the role color seems to be a web-safe color name. Non-moderation users seem to get the color "transparent"
 	 */
 	public String getColor() {
 		return color;
 	}
 
 	/**
-	 * Get all permissions for this member in the project scope
+	 * @return all permissions for this member in the project scope
 	 */
 	public OrePermissionGrant getPermissions() {
 		return new OrePermissionGrant(Arrays.asList(permissions.clone()));

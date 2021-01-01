@@ -31,6 +31,7 @@ public class Projects extends AbstractRoute {
      * This means we have to sift through all search results and remove all
      * results that might accidentally match on name or keywords.
      *
+     * @param pluginId the plugin id to search
      * @return the first matching OreProject if through all result pages, a project with matching project id was found.
      */
     public CompletableFuture<OreProject> findById(String pluginId) {
@@ -45,6 +46,7 @@ public class Projects extends AbstractRoute {
      * If you don't want to use the cache and to get a fresh instance of this object,
      * try {@link #fetch(OreProjectReference)} instead.
      *
+     * @param namespace namespace
      * @return empty if the connection failed or no such plugin exists
      */
     public CompletableFuture<OreProject> get(OreNamespace namespace) {
@@ -62,6 +64,7 @@ public class Projects extends AbstractRoute {
      * Best usage is probably using something along the lines of
      * <code>OreProject#with(OreApiV2, Projects::fetch)</code>
      *
+     * @param projectRef project reference
      * @return empty if the connection failed or no such plugin exists
      */
     public CompletableFuture<OreProject> fetch(OreProjectReference projectRef) {
@@ -92,6 +95,9 @@ public class Projects extends AbstractRoute {
     /**
      * Deletes this project from ore and removes it from cache.<br>
      * <b>This is permanent and can not be undone!</b>
+     *
+     * @param project project
+     * @return nothing
      */
     public CompletableFuture<Void> delete(OreProjectReference project) {
         return enqueue(NetTasks.deleteProject(cm(), project));
@@ -113,6 +119,7 @@ public class Projects extends AbstractRoute {
      * @param project the project to query
      * @param from    the first day to query (inclusive)
      * @param to      the last day to query (inclusive)
+     * @return stats
      */
     public CompletableFuture<Map<Date, OreProjectStatsDay>> stats(OreProjectReference project, Date from, Date to) {
         return enqueue(NetTasks.getProjectStats(cm(), project, from, to));
@@ -127,8 +134,11 @@ public class Projects extends AbstractRoute {
      * <li>{@link OreVisibility#SoftDelete} requires {@link OrePermission#Delete_Project}</li>
      * </ul>
      *
+     * @param project the project to update
      * @param visibility this will be the new visibility for this project
      * @param comment    The api allows you to specify a reason for why you changed the visibility
+     * @param <T> the project reference class
+     * @return the project for chaining/updating
      */
     public <T extends OreProjectReference> CompletableFuture<T> visibility(T project, OreVisibility visibility, String comment) {
         return enqueue(NetTasks.updateProjectVisibility(cm(), project, visibility, comment));

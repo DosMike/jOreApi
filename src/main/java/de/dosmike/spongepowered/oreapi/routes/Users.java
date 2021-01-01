@@ -17,6 +17,9 @@ public class Users extends AbstractRoute {
 
     /**
      * Search one or more users or organisations with the specific filter
+     *
+     * @param filter filter
+     * @return user list
      */
     public CompletableFuture<OreUserList> search(OreUserFilter filter) {
         return enqueue(NetTasks.userSearch(cm(), filter));
@@ -24,6 +27,7 @@ public class Users extends AbstractRoute {
 
     /**
      * Get the user object for the user represented by the current session
+     * @return user
      */
     public CompletableFuture<OreUser> self() {
         return cache().user("@me")

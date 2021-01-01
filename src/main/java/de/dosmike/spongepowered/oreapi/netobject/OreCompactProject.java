@@ -46,6 +46,8 @@ public class OreCompactProject extends OreProjectReference {
 
 	/**
 	 * Create an instance from a compact project json object
+	 *
+	 * @param object the json source
 	 */
 	public OreCompactProject(JsonObject object) {
 		JsonUtil.fillSelf(this, object);

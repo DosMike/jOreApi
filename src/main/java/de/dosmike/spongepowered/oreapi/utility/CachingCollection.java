@@ -18,6 +18,10 @@ public class CachingCollection<E> implements Collection<E>, Serializable {
 	/**
 	 * timeSpan and timeUnit specify how long entries will be valid.
 	 * Elements will be lazy-checked (removed if expired &amp; values requested)
+	 *
+	 * @param container a wrapped container that'll hold the expiring values
+	 * @param timeSpan  the amount of time elements will be cached
+	 * @param timeUnit  the time unit for time span
 	 */
 	public CachingCollection(Collection<Expiring<E>> container, long timeSpan, TimeUnit timeUnit) {
 		this.container = container;
@@ -27,6 +31,8 @@ public class CachingCollection<E> implements Collection<E>, Serializable {
 	/**
 	 * Wraps a {@link HashSet} with this caching collection, so not only
 	 * will elements expire, but they'll also be unique
+	 * @param timeSpan the amount of time elements will be cached
+	 * @param timeUnit the time unit for time span
 	 */
 	public CachingCollection(long timeSpan, TimeUnit timeUnit) {
 		this.container = new HashSet<>();

@@ -275,6 +275,7 @@ public class JsonUtil {
 	 * FromJson annotation will be used.
 	 *
 	 * @param instance the object to jsonify
+	 * @param tags     the tags a field has to have for serialization
 	 * @return the object as jso
 	 */
 	public static JsonObject buildJson(Object instance, String... tags) {

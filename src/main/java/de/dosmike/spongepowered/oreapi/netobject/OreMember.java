@@ -20,7 +20,7 @@ public class OreMember implements Serializable {
 	//region getter
 
 	/**
-	 * @return the username for this user->role mapping
+	 * @return the username for this user-&gt;role mapping
 	 */
 	public String getUsername() {
 		return username;

@@ -199,6 +199,9 @@ public class ConnectionManager {
 		 * Do NOT use a browser string!
 		 * The API will ignore requests that don't use a valid user agent.
 		 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+		 *
+		 * @param userAgent userAgent
+		 * @return the builder for chaining
 		 */
 		public Builder setApplication(String userAgent) {
 			this.application = userAgent;
@@ -208,12 +211,18 @@ public class ConnectionManager {
 		/**
 		 * Use the provided key for authentication and session creation.
 		 * You can change this at a later points with {@link #withApiKey}
+		 *
+		 * @param key api key
+		 * @return the builder for chaining
 		 */
 		public Builder setApiKey(String key) {
 			this.apiKey = key;
 			return Builder.this;
 		}
 
+		/**
+		 * @return the api instance
+		 */
 		public OreApiV2 build() {
 			ConnectionManager connection = new ConnectionManager(application);
 			connection.withApiKey(apiKey);

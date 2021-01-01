@@ -17,6 +17,8 @@ public interface Limiter {
 
 	/**
 	 * blocks until a request can be made
+	 *
+	 * @throws InterruptedException if interrupted
 	 */
 	default void waitForNext() throws InterruptedException {
 		long nextAt = nextRequestAt();

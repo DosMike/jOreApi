@@ -73,6 +73,9 @@ public class OreProjectReference implements Serializable {
 	 * Access a different route from this project.
 	 * Most interesting uses are #with(api, Permissions.class) and #with(api, Members.class)
 	 *
+	 * @param apiInstance the api instance to use
+	 * @param route       the route class to use
+	 * @param <T>         the route class to use
 	 * @return a the target route with project information, if applicable
 	 */
 	public <T extends AbstractRoute> T with(OreApiV2 apiInstance, Class<T> route) {
@@ -92,6 +95,11 @@ public class OreProjectReference implements Serializable {
 	 * Access a different route from this project and applies the project to the functor.
 	 * Could be used like this #with(api, Projects.class, Projects::fetch)
 	 *
+	 * @param apiInstance the api instance to use
+	 * @param route the route class to use
+	 * @param function a function accepting the route and OreProjectReference to transform it. Most route methods work
+	 * @param <T> the route class to use
+	 * @param <R> the type the BiConsumer returns
 	 * @return the result object for the specified route and functor
 	 */
 	public <T extends AbstractRoute, R> R with(OreApiV2 apiInstance, Class<T> route, BiFunction<T, OreProjectReference, R> function) {
@@ -102,6 +110,9 @@ public class OreProjectReference implements Serializable {
 	 * Access a different route from this project.
 	 * Most interesting uses are #with(api, Permissions.class) and #with(api, Members.class)
 	 *
+	 * @param apiInstance the api instance to use
+	 * @param function a function accepting the Projects route and OreProjectReference to transform it. Most route methods work
+	 * @param <R> the type the BiConsumer returns
 	 * @return a the target route with project information, if applicable
 	 */
 	public <R> R with(OreApiV2 apiInstance, BiFunction<Projects, OreProjectReference, R> function) {
