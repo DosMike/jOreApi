@@ -8,6 +8,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class Versions extends AbstractRoute {
@@ -63,7 +64,7 @@ public class Versions extends AbstractRoute {
      */
     public CompletableFuture<String> changelog(OreVersionReference version) {
         return get(version)
-                .thenCompose(v -> v.getChangelog()
+                .thenCompose(v -> Optional.ofNullable(v.getChangelog())
                         .map(CompletableFuture::completedFuture)
                         .orElseGet(() -> enqueue(NetTasks.getVerionChangelog(cm(), v))));
     }

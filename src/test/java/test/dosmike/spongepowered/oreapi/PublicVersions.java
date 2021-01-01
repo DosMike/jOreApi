@@ -10,7 +10,7 @@ import org.junit.jupiter.api.*;
 import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -41,7 +41,7 @@ public class PublicVersions {
 	public void getChangelog() {
 		String changeLog = versions.getResult().get(0).with(api, Versions.class, Versions::changelog).join();
 		assertFalse(changeLog.isEmpty());
-		assertTrue(versions.getResult().get(0).getChangelog().isPresent());
+		assertNotNull(versions.getResult().get(0).getChangelog());
 	}
 
 	@Test
