@@ -8,6 +8,10 @@ import java.util.concurrent.TimeUnit;
 
 import static de.dosmike.spongepowered.oreapi.utility.ReflectionHelper.friendField;
 
+/**
+ * Cache manager for projects, versions and users. Not meant to directly being interacted with
+ * thus comments might be extremely sparse.
+ */
 public class ObjectCache {
 
 	ObjectCache() {
@@ -116,6 +120,11 @@ public class ObjectCache {
 
 	//endregion
 
+	/**
+	 * this method allows to timeout stale objects, mainly by poking at {@link CachingCollection#size()}.
+	 * While it might be a good idea to do this every now and again in long running instances it won't be interesting
+	 * for most use cases.
+	 */
 	public void poke() {
 		// CachingCollection.size() performs timeout check and returns the remaining size
 
@@ -126,6 +135,8 @@ public class ObjectCache {
 			if (vkeys.size() == 0) vkeys.add(k);
 		});
 		for (String k : vkeys) oreVersionCache.remove(k);
+		//noinspection ResultOfMethodCallIgnored
+		oreUsers.size();
 
 	}
 

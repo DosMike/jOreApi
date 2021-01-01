@@ -7,6 +7,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Route for Projects
+ */
 public class Projects extends AbstractRoute {
 
     public Projects(OreApiV2 api) {

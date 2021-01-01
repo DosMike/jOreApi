@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Version management route
+ */
 public class Versions extends AbstractRoute {
 
     public Versions(OreApiV2 api) {

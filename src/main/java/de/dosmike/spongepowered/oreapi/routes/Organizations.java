@@ -5,6 +5,9 @@ import de.dosmike.spongepowered.oreapi.netobject.OreOrganization;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Manage organizations
+ */
 public class Organizations extends AbstractRoute {
 
     public Organizations(OreApiV2 api) {

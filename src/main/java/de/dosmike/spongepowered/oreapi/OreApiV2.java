@@ -6,13 +6,8 @@ import de.dosmike.spongepowered.oreapi.routes.Projects;
 import de.dosmike.spongepowered.oreapi.routes.Users;
 
 /**
- * This class is the "party in the front" - enjoy a class with clean API<br>
- * <ul><li>{@link OreApiV2} Presents a nice interface with only the necessary methods. It utilizes the cache and, if
- * necessary calls into NetTasks for live data.</li>
- * <li>NetTasks Is the actual API implementation. Providing suppliers that can be scheduled in the Limiter held
- * by the ConnectionManager</li>
- * <li>ConnectionManager holds all the local API data including cache and session. It contains all sorts of
- * utility from building connection objects to destroying sessions</li></ul>
+ * The main interface for the Ore Api. Build your instance, pick some route and go.<br>
+ * If your application does not terminate properly you can try to terminate the connection manager at the very end.
  */
 public class OreApiV2 implements AutoCloseable {
 
@@ -24,6 +19,15 @@ public class OreApiV2 implements AutoCloseable {
 
 	//region NON_API - Utility
 
+	/**
+	 * The connection manager should not be of any particular use for you.<br>
+	 * One thing you might want to do, if you're holding a long running instance of the api is to poke the cache every
+	 * now and then, but that's optional as well.<br>
+	 * Once the application using the api is about to terminate you should call {@link ConnectionManager#terminate()}
+	 * but that's really it and can probably ignored as well.
+	 *
+	 * @return the ConnectionManager hiding https connections and stuff
+	 */
 	public ConnectionManager getConnectionManager() {
 		return instance;
 	}

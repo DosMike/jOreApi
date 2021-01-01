@@ -1,11 +1,13 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
+import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
 
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 public class OreVersion extends OreVersionReference {
 
@@ -125,6 +127,18 @@ public class OreVersion extends OreVersionReference {
 	 */
 	public void updateChangelog(String changelog) {
 		this.changelog = changelog != null ? changelog : "";
+	}
+
+	/**
+	 * convenience function for api#projects().versions().update(this).
+	 * If you want to save changes in the repository, you'll have to update it through this method.
+	 * After updating the version it is recommended to use the result of this method instead.
+	 *
+	 * @param api the instance to use for updating
+	 * @return the new version instance
+	 */
+	public CompletableFuture<OreVersion> update(OreApiV2 api) {
+		return api.projects().versions().update(this);
 	}
 
 }

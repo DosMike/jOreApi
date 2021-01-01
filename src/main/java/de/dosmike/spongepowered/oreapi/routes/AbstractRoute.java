@@ -8,6 +8,9 @@ import java.net.URLEncoder;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+/**
+ * Utility for the Route classes to get the api instance, cache and connection manager
+ */
 public abstract class AbstractRoute {
 
     protected OreApiV2 api;
@@ -29,7 +32,10 @@ public abstract class AbstractRoute {
     }
 
     protected ConnectionManager cm() {
-        return api.getConnectionManager();
+        ConnectionManager cm = api.getConnectionManager();
+        if (cm == null)
+            throw new IllegalStateException("The api instance was already closed");
+        return cm;
     }
 
     protected ObjectCache cache() {

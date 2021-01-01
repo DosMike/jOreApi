@@ -8,6 +8,14 @@ import de.dosmike.spongepowered.oreapi.netobject.OrePermissionGrant;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Check for Permissions in various contexts.
+ * The instances are more accessible from the targets.
+ *
+ * @see OreApiV2#permissions() Global Permissions
+ * @see Projects#permissions(OreNamespace) Project Permissions
+ * @see Organizations#permissions(String) Organization Permissions
+ */
 public abstract class Permissions extends AbstractRoute {
 
     private Permissions(OreApiV2 api, String query) {

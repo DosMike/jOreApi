@@ -16,16 +16,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
- * This is the "business in the back" class of {@link OreApiV2}. This class does the basic work nobody else wants to do.
- * <br>
- * Please do me a favour and call {@link #terminate} when you're exiting, this class hosts a static thread that needs to
- * go at some point.<br>
- * <ul><li>{@link OreApiV2} Presents a nice interface with only the necessary methods. It utilizes the cache and, if
- * necessary calls into NetTasks for live data.</li>
- * <li>NetTasks Is the actual API implementation. Providing suppliers that can be scheduled in the Limiter held
- * by the ConnectionManager</li>
- * <li>ConnectionManager holds all the local API data including cache and session. It contains all sorts of
- * utility from building connection objects to destroying sessions</li></ul>
+ * The Connection Manager handles all the background stuff you're not supposed to see, like ever.
+ * Api instances are created from connection managers builder and the builder is instantiated from OreApiV2.
+ * This is just another capsule to keep the api class nice and tidy.
+ * LPT: Just cram everything into drawers and your room is clean.
+ *
+ * @see OreApiV2#builder()
  */
 public class ConnectionManager {
 

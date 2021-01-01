@@ -9,6 +9,12 @@ import de.dosmike.spongepowered.oreapi.netobject.OreRole;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Shared Route for Project and Organization members
+ *
+ * @see Project
+ * @see Organization
+ */
 public abstract class Members extends AbstractRoute {
 
     private Members(OreApiV2 api) {
@@ -34,7 +40,9 @@ public abstract class Members extends AbstractRoute {
      */
     public abstract CompletableFuture<Void> set(Map<String, OreRole> roles);
 
-
+    /**
+     * Route for project members
+     */
     public static class Project extends Members {
 
         OreProjectReference project;
@@ -55,9 +63,11 @@ public abstract class Members extends AbstractRoute {
             return enqueue(NetTasks.setProjectMembers(cm(), project, roles));
         }
 
-
     }
 
+    /**
+     * Route for organization members
+     */
     public static class Organization extends Members {
 
         String organization;

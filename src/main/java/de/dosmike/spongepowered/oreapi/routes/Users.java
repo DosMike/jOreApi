@@ -6,6 +6,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Query user information
+ */
 public class Users extends AbstractRoute {
 
     public Users(OreApiV2 api) {
