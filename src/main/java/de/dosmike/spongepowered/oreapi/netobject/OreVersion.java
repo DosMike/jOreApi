@@ -1,105 +1,144 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
+import de.dosmike.spongepowered.oreapi.OreApiV2;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
 
-import java.io.Serializable;
-import java.net.URLEncoder;
-import java.util.Optional;
+import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
-public class OreVersion implements Serializable {
+public class OreVersion extends OreVersionReference {
 
-    /**
-     * This allows requests for version without having to specify the project again.
-     * Also prevents accidentally specifying in the wrong project.
-     */
-    OreProjectReference project;
-    @FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
-    long createdAt;
-    @FromJson("name")
-    String name;
-    @FromJson("dependencies")
-    OreVersionDependency[] dependencies;
-    @FromJson("visibility")
-    OreVisibility visibility;
-    @FromJson("stats.downloads")
-    int downloads;
-    @FromJson("file_info")
-    OreFileInfo fileInfo;
-    @FromJson(value = "author", optional = true)
-    String author;
-    @FromJson("review_state")
-    OreReviewState reviewState;
-    @FromJson("tags")
-    OreVersionTags tags;
-    @FromJson(value = "external.discourse.post_id", optional = true)
-    int discoursePostId;
+	@FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
+	long createdAt;
+	@FromJson("dependencies")
+	OreVersionDependency[] dependencies;
+	@FromJson("visibility")
+	OreVisibility visibility;
+	@FromJson("stats.downloads")
+	int downloads;
+	@FromJson("file_info")
+	OreFileInfo fileInfo;
+	@FromJson(value = "author", optional = true)
+	String author;
+	@FromJson("review_state")
+	OreReviewState reviewState;
+	@FromJson("tags")
+	OreVersionTags tags;
+	@FromJson(value = "external.discourse.post_id", optional = true)
+	int discoursePostId;
 
-    String changelog = null;
+	String changelog = null;
 
-    public OreVersion(OreProjectReference projectBackRef, JsonObject object) {
-        project = projectBackRef.toReference();
-        JsonUtil.fillSelf(this, object);
-    }
+	public OreVersion(OreProjectReference projectBackRef, JsonObject object) {
+		project = projectBackRef.toReference();
+		JsonUtil.fillSelf(this, object);
+	}
 
-    public OreProjectReference getProjectRef() {
-        return project;
-    }
+	//region getter
 
-    public long getCreatedAt() {
-        return createdAt;
-    }
+	/**
+	 * @return the instance this version was created at as unix timestamp in milliseconds
+	 * @see Date#getTime()
+	 */
+	public long getCreatedAt() {
+		return createdAt;
+	}
 
-    public String getName() {
-        return name;
-    }
+	/**
+	 * @return this projects dependencies, required for the project to work
+	 */
+	public OreVersionDependency[] getDependencies() {
+		return dependencies;
+	}
 
-    public String getURLSafeName() {
-        try {
-            return URLEncoder.encode(name, "UTF-8");
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
+	/**
+	 * @return the version visibility
+	 */
+	public OreVisibility getVisibility() {
+		return visibility;
+	}
 
-    public OreVersionDependency[] getDependencies() {
-        return dependencies;
-    }
+	/**
+	 * @return the number of downloads for this version
+	 */
+	public int getDownloads() {
+		return downloads;
+	}
 
-    public OreVisibility getVisibility() {
-        return visibility;
-    }
+	/**
+	 * @return information about the project asset
+	 */
+	public OreFileInfo getFileInfo() {
+		return fileInfo;
+	}
 
-    public int getDownloads() {
-        return downloads;
-    }
+	/**
+	 * @return the author name
+	 */
+	public String getAuthor() {
+		return author;
+	}
 
-    public OreFileInfo getFileInfo() {
-        return fileInfo;
-    }
+	/**
+	 * Downloads version should prompts the user a warning about potential risks unless the version
+	 * is marked as reviewed.
+	 *
+	 * @return the version review state
+	 */
+	public OreReviewState getReviewState() {
+		return reviewState;
+	}
 
-    public String getAuthor() {
-        return author;
-    }
+	/**
+	 * @return stability, release type, platforms and more
+	 */
+	public OreVersionTags getTags() {
+		return tags;
+	}
 
-    public OreReviewState getReviewState() {
-        return reviewState;
-    }
+	/**
+	 * @return the post id in the forums. you probably have no use for this.
+	 */
+	public int getDiscoursePostId() {
+		return discoursePostId;
+	}
 
-    public OreVersionTags getTags() {
-        return tags;
-    }
+	/**
+	 * The changelog is not included in the normal versions response but has to be queried through
+	 * a separate endpoint. Once that endpoint was called the changelog will remain available in
+	 * this version object until the cache expires.<br>
+	 * If no changelog was returned from ore this will return empty, but never again null.
+	 *
+	 * @return the version changelog if fetched from remote, null otherwise
+	 */
+	public String getChangelog() {
+		return changelog;
+	}
+	//endregion
 
-    public int getDiscoursePostId() {
-        return discoursePostId;
-    }
+	/**
+	 * Not meant to be called manually. This function will update the changelog from the
+	 * changelog response.
+	 *
+	 * @param changelog new changelog
+	 */
+	public void updateChangelog(String changelog) {
+		this.changelog = changelog != null ? changelog : "";
+	}
 
-    public void updateChangelog(String changelog) {
-        this.changelog = changelog != null ? changelog : "";
-    }
-    public Optional<String> getChangelog() {
-        return Optional.ofNullable(changelog);
-    }
+	/**
+	 * convenience function for api#projects().versions().update(this).
+	 * If you want to save changes in the repository, you'll have to update it through this method.
+	 * After updating the version it is recommended to use the result of this method instead.
+	 *
+	 * @param api the instance to use for updating
+	 * @return the new version instance
+	 */
+	public CompletableFuture<OreVersion> update(OreApiV2 api) {
+		return api.projects().versions().update(this);
+	}
+
 }

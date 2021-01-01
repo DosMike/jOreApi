@@ -4,6 +4,12 @@ plugins {
     id 'maven'
 }
 
+//set target version to java 8 to allow the library to load on a minecraft server
+compileJava {
+    sourceCompatibility '1.8'
+    targetCompatibility '1.8'
+}
+
 group 'com.itwookie'
 version '1.0-SNAPSHOT'
 

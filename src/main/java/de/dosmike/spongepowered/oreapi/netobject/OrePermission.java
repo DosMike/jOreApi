@@ -1,5 +1,9 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
+/**
+ * This reflects the ore enum for names permissions.
+ * Enum values are created with the promise that value#name().equalsIgnoreCase(remoteName).
+ */
 public enum OrePermission {
 
     View_Public_Info,
@@ -36,7 +40,7 @@ public enum OrePermission {
             if (permission.name().equalsIgnoreCase(string))
                 return permission;
         }
-        throw new IllegalArgumentException("No such OrePermission "+string);
+        throw new IllegalArgumentException("No such OrePermission " + string);
     }
 
 }

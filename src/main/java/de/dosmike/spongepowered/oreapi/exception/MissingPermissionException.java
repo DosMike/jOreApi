@@ -10,21 +10,22 @@ import java.util.stream.Collectors;
  * This means that your current session lacks some permission.
  */
 public class MissingPermissionException extends RuntimeException {
-    public MissingPermissionException() {
-    }
+	public MissingPermissionException() {
+	}
 
-    public MissingPermissionException(String message) {
-        super(message);
-    }
-    public MissingPermissionException(OrePermission... perms) {
-        super("Missing Permission for endpoint: " + Arrays.stream(perms).map(Enum::name).collect(Collectors.joining(", ")));
-    }
+	public MissingPermissionException(String message) {
+		super(message);
+	}
 
-    public MissingPermissionException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public MissingPermissionException(OrePermission... perms) {
+		super("Missing Permission for endpoint: " + Arrays.stream(perms).map(Enum::name).collect(Collectors.joining(", ")));
+	}
 
-    public MissingPermissionException(Throwable cause) {
-        super(cause);
-    }
+	public MissingPermissionException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public MissingPermissionException(Throwable cause) {
+		super(cause);
+	}
 }

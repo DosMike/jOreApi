@@ -1,64 +1,265 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
+import de.dosmike.spongepowered.oreapi.routes.Projects;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
+import de.dosmike.spongepowered.oreapi.utility.JsonTags;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
-
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
+/**
+ * The project settings contain keywords, license information
+ * whether the main forum post is synced with the home page and
+ * a collection of various links.
+ */
 public class OreProjectSettings implements Serializable {
 
-    @FromJson("keywords")
-    String[] keywords;
-    @FromJson(value = "homepage", optional = true)
-    String homepageUrl;
-    @FromJson(value = "issues", optional = true)
-    String issuesUrl;
-    @FromJson(value = "sources", optional = true)
-    String sourcesUrl;
-    @FromJson(value = "support", optional = true)
-    String supportUrl;
-    @FromJson(value = "license.name", optional = true)
-    String licenseName;
-    @FromJson(value = "license.url", optional = true)
-    String licenseUrl;
-    @FromJson("forum_sync")
-    boolean forumSync;
+	/**
+	 * this supports a maximum of 5 keywords
+	 */
+	@FromJson("keywords")
+	@JsonTags("patchProject")
+	String[] keywords;
+	@FromJson(value = "homepage", optional = true)
+	@JsonTags("patchProject")
+	String homepageUrl;
+	@FromJson(value = "issues", optional = true)
+	@JsonTags("patchProject")
+	String issuesUrl;
+	@FromJson(value = "sources", optional = true)
+	@JsonTags("patchProject")
+	String sourcesUrl;
+	@FromJson(value = "support", optional = true)
+	@JsonTags("patchProject")
+	String supportUrl;
+	@FromJson(value = "license.name", optional = true)
+	@JsonTags("patchProject")
+	String licenseName;
+	@FromJson(value = "license.url", optional = true)
+	@JsonTags("patchProject")
+	String licenseUrl;
+	@FromJson("forum_sync")
+	@JsonTags("patchProject")
+	boolean forumSync;
 
-    public OreProjectSettings(JsonObject object) {
-        JsonUtil.fillSelf(this, object);
-    }
+	public OreProjectSettings(JsonObject object) {
+		JsonUtil.fillSelf(this, object);
+	}
 
-    public String[] getKeywords() {
-        return keywords;
-    }
+	//region getters
 
-    public String getHomepageUrl() {
-        return homepageUrl;
-    }
+	/**
+	 * Get up to 5 keywords set for this project, that help in finding the project through search.
+	 *
+	 * @return a copy of the keyword list
+	 */
+	public List<String> getKeywords() {
+		return new ArrayList<>(Arrays.asList(keywords));
+	}
 
-    public String getIssuesUrl() {
-        return issuesUrl;
-    }
+	/**
+	 * @return the homepage url if set
+	 */
+	@Nullable
+	public String getHomepageUrl() {
+		return homepageUrl;
+	}
 
-    public String getSourcesUrl() {
-        return sourcesUrl;
-    }
+	/**
+	 * @return the url to the issue tracker, if set
+	 */
+	@Nullable
+	public String getIssuesUrl() {
+		return issuesUrl;
+	}
 
-    public String getSupportUrl() {
-        return supportUrl;
-    }
+	/**
+	 * @return the url to the source-code, if set
+	 */
+	@Nullable
+	public String getSourcesUrl() {
+		return sourcesUrl;
+	}
 
-    public String getLicenseName() {
-        return licenseName;
-    }
+	/**
+	 * @return the url to the support community, if set
+	 */
+	@Nullable
+	public String getSupportUrl() {
+		return supportUrl;
+	}
 
-    public String getLicenseUrl() {
-        return licenseUrl;
-    }
+	/**
+	 * The name is intended to be well known name. Examples are:<ul>
+	 * <li>MIT</li>
+	 * <li>Apache 2.0</li>
+	 * <li>GNU General Public License (GPL)</li>
+	 * <li>GNU Lesser General Public License (LGPL)</li>
+	 * </ul>
+	 * The license url should match your chosen license name and point to your
+	 * instance of the license file, preferably within your sourcecode repository.
+	 * <br>
+	 *
+	 * @return the name of the license applied to this project
+	 */
+	@Nullable
+	public String getLicenseName() {
+		return licenseName;
+	}
 
-    public boolean isForumSync() {
-        return forumSync;
-    }
+	/**
+	 * @return the url to the license text file, if set
+	 */
+	@Nullable
+	public String getLicenseUrl() {
+		return licenseUrl;
+	}
+
+	/**
+	 * Forum sync means that, whenever you change the home page of your project, the initial
+	 * post on the forum discussion thread is updated as well.
+	 *
+	 * @return true if the forum post is set to sync
+	 */
+	public boolean isForumSync() {
+		return forumSync;
+	}
+	//endregion
+
+	//region setters
+
+	/**
+	 * Specifying keywords will help people find your project on ore. You can set up to 5 keywords.
+	 * If more than 5 Keywords are passed to this method and exception will be thrown.
+	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
+	 *
+	 * @param keywords the new set of keywords for this project
+	 * @see Projects#update(OreProject)
+	 * @see OreProject#update
+	 */
+	public void setKeywords(Collection<String> keywords) {
+		this.keywords = keywords.toArray(new String[0]);
+	}
+
+	/**
+	 * Change this projects homepage url.
+	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
+	 *
+	 * @param homepageUrl the new url
+	 * @see Projects#update(OreProject)
+	 * @see OreProject#update
+	 */
+	public void setHomepageUrl(String homepageUrl) {
+		this.homepageUrl = homepageUrl;
+	}
+
+	/**
+	 * Change this projects issue tracker url.
+	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
+	 *
+	 * @param issuesUrl the new url
+	 * @see Projects#update(OreProject)
+	 * @see OreProject#update
+	 */
+	public void setIssuesUrl(String issuesUrl) {
+		this.issuesUrl = issuesUrl;
+	}
+
+	/**
+	 * Change this projects source code url.
+	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
+	 *
+	 * @param sourcesUrl the new url
+	 * @see Projects#update(OreProject)
+	 * @see OreProject#update
+	 */
+	public void setSourcesUrl(String sourcesUrl) {
+		this.sourcesUrl = sourcesUrl;
+	}
+
+	/**
+	 * Change this projects support url.
+	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
+	 *
+	 * @param supportUrl the new url
+	 * @see Projects#update(OreProject)
+	 * @see OreProject#update
+	 */
+	public void setSupportUrl(String supportUrl) {
+		this.supportUrl = supportUrl;
+	}
+
+	/**
+	 * Change this projects license. The name is intended to be well known name. Examples are:<ul>
+	 * <li>MIT</li>
+	 * <li>Apache 2.0</li>
+	 * <li>GNU General Public License (GPL)</li>
+	 * <li>GNU Lesser General Public License (LGPL)</li>
+	 * </ul>
+	 * The license url should match your chosen license name and point to your
+	 * instance of the license file, preferably within your sourcecode repository.
+	 * <br>
+	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
+	 *
+	 * @param licenseName the name for your projects license
+	 * @param licenseUrl  the url for your projects license
+	 * @see Projects#update(OreProject)
+	 * @see OreProject#update
+	 */
+	public void setLicenseName(String licenseName, String licenseUrl) {
+		this.licenseName = licenseName;
+		this.licenseUrl = licenseUrl;
+	}
+
+	/**
+	 * Set whether this project syncs up with the forums or not. This means that changes to your projects
+	 * description (home page) will be reflected in the matching forum threads first post.
+	 * If you want to commit changes to this value you'll have to update the owning object on the remote.
+	 *
+	 * @param forumSync true if you want the forum to be synced
+	 * @see Projects#update(OreProject)
+	 * @see OreProject#update
+	 */
+	public void setForumSync(boolean forumSync) {
+		this.forumSync = forumSync;
+	}
+	//endregion
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		OreProjectSettings that = (OreProjectSettings) o;
+
+		if (forumSync != that.forumSync) return false;
+		// Probably incorrect - comparing Object[] arrays with Arrays.equals
+		if (!Arrays.equals(keywords, that.keywords)) return false;
+		if (homepageUrl != null ? !homepageUrl.equals(that.homepageUrl) : that.homepageUrl != null) return false;
+		if (issuesUrl != null ? !issuesUrl.equals(that.issuesUrl) : that.issuesUrl != null) return false;
+		if (sourcesUrl != null ? !sourcesUrl.equals(that.sourcesUrl) : that.sourcesUrl != null) return false;
+		if (supportUrl != null ? !supportUrl.equals(that.supportUrl) : that.supportUrl != null) return false;
+		if (licenseName != null ? !licenseName.equals(that.licenseName) : that.licenseName != null) return false;
+		return licenseUrl != null ? licenseUrl.equals(that.licenseUrl) : that.licenseUrl == null;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Arrays.hashCode(keywords);
+		result = 31 * result + (homepageUrl != null ? homepageUrl.hashCode() : 0);
+		result = 31 * result + (issuesUrl != null ? issuesUrl.hashCode() : 0);
+		result = 31 * result + (sourcesUrl != null ? sourcesUrl.hashCode() : 0);
+		result = 31 * result + (supportUrl != null ? supportUrl.hashCode() : 0);
+		result = 31 * result + (licenseName != null ? licenseName.hashCode() : 0);
+		result = 31 * result + (licenseUrl != null ? licenseUrl.hashCode() : 0);
+		result = 31 * result + (forumSync ? 1 : 0);
+		return result;
+	}
 }

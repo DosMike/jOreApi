@@ -1,5 +1,9 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
+/**
+ * This reflects the ore enum for project categories.
+ * Enum values are created with the promise that value#name().equalsIgnoreCase(remoteName).
+ */
 public enum OreCategory {
 
     Admin_Tools,
@@ -19,7 +23,7 @@ public enum OreCategory {
             if (category.name().equalsIgnoreCase(string))
                 return category;
         }
-        throw new IllegalArgumentException("No such OreCategory "+string);
+        throw new IllegalArgumentException("No such OreCategory " + string);
     }
 
 }
