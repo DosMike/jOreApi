@@ -2,22 +2,15 @@ package de.dosmike.spongepowered.oreapi.netobject;
 
 import com.google.gson.JsonObject;
 import de.dosmike.spongepowered.oreapi.OreApiV2;
-import de.dosmike.spongepowered.oreapi.utility.*;
+import de.dosmike.spongepowered.oreapi.utility.FromJson;
+import de.dosmike.spongepowered.oreapi.utility.JsonTags;
+import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
+import de.dosmike.spongepowered.oreapi.utility.TypeMappers;
 
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 public class OreProject extends OreCompactProject {
-
-	/**
-	 * used for updating. if you change the name/owner you can't update the repository
-	 * because the change needs to be pushed against the original namespace.<br>
-	 * This field will be set on construction, and be used when {@link #update} is called.
-	 * After that, this instance will be invalid.
-	 * TODO: maybe mark the instance invalid with a flag?
-	 */
-	@ReflectiveUse
-	final OreNamespace shadowNamespace;
 
 	@FromJson(value = "created_at", mapper = TypeMappers.StringTimestampMapper.class)
 	long createdAt;
@@ -44,6 +37,9 @@ public class OreProject extends OreCompactProject {
 	public OreProject(JsonObject object) {
 		JsonUtil.fillSelf(this, object);
 		shadowNamespace = new OreNamespace(namespace.owner, namespace.slug);
+		// allows the Promoted version to construct a version reference
+		OreProjectReference ref = this.toReference();
+		for (OrePromotedVersion pv : promotedVersions) pv.setProjectReference(ref);
 	}
 
 	//region getter

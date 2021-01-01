@@ -50,6 +50,9 @@ public class OreCompactProject extends OreProjectReference {
 	public OreCompactProject(JsonObject object) {
 		JsonUtil.fillSelf(this, object);
 		shadowNamespace = new OreNamespace(namespace.owner, namespace.slug);
+		// allows the Promoted version to construct a version reference
+		OreProjectReference ref = this.toReference();
+		for (OrePromotedVersion pv : promotedVersions) pv.setProjectReference(ref);
 	}
 
 	//region getter
@@ -90,4 +93,8 @@ public class OreCompactProject extends OreProjectReference {
 	}
 	//endregion
 
+	@Override
+	public OreProjectReference toReference() {
+		return new OreProjectReference(this);
+	}
 }

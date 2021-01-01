@@ -7,6 +7,10 @@ import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 import java.io.Serializable;
 import java.util.Arrays;
 
+/**
+ * Information about a member within a project or organization.
+ * The role they have grants them certain permissions in addition to a fancy name.
+ */
 public class OreRoleInfo implements Serializable {
 
 	@FromJson("name")

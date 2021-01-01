@@ -1,9 +1,16 @@
 package de.dosmike.spongepowered.oreapi.netobject;
 
+import de.dosmike.spongepowered.oreapi.routes.Projects;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 
 import java.io.Serializable;
 
+/**
+ * The project template is used to create new projects on ore.
+ *
+ * @see Projects#create(OreProjectTemplate)
+ * @see #builder()
+ */
 public class OreProjectTemplate implements Serializable {
 
 	@FromJson("name")

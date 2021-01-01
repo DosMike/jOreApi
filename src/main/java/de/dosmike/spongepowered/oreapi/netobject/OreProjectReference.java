@@ -36,15 +36,19 @@ public class OreProjectReference implements Serializable {
 		JsonUtil.fillSelf(this, object);
 	}
 
-	private OreProjectReference(OreProjectReference project) {
+	protected OreProjectReference(OreProjectReference project) {
 		this.pluginId = project.pluginId;
 		this.namespace = new OreNamespace(project.namespace.owner, project.namespace.slug);
 	}
 
 	/**
+	 * Constructs a new reference of the project, or simply returns itself, if already a reference
+	 *
 	 * @return the project reference from this object
 	 */
 	public OreProjectReference toReference() {
+		if (getClass().equals(OreProjectReference.class))
+			return this; //less copying
 		return new OreProjectReference(this);
 	}
 
@@ -113,6 +117,10 @@ public class OreProjectReference implements Serializable {
 
 		}
 
+		/**
+		 * @param id the unique project id this instance if referencing
+		 * @return the builder for chaining
+		 */
 		public Builder projectId(String id) {
 			if (id == null || id.isEmpty())
 				throw new IllegalArgumentException("Owner can't be empty");
@@ -120,6 +128,10 @@ public class OreProjectReference implements Serializable {
 			return Builder.this;
 		}
 
+		/**
+		 * @param namespace the namespace that points to the project on ore
+		 * @return the builder for chaining
+		 */
 		public Builder namespace(OreNamespace namespace) {
 			if (namespace == null || namespace.owner.isEmpty() || namespace.slug.isEmpty())
 				throw new IllegalArgumentException("Namespace can't be empty");
@@ -127,6 +139,11 @@ public class OreProjectReference implements Serializable {
 			return Builder.this;
 		}
 
+		/**
+		 * Make sure namespace and project id are set before calling this
+		 *
+		 * @return the complete reference
+		 */
 		public OreProjectReference build() {
 			if (a == null)
 				throw new IllegalArgumentException("Owner has to be set");
@@ -139,12 +156,20 @@ public class OreProjectReference implements Serializable {
 		}
 	}
 
+	/**
+	 * Create a new reference by hand from a project id and namespace.
+	 * If you do not have/know the namespace, you can search the project by id instead.
+	 *
+	 * @return Builder for a new project reference
+	 */
 	public static Builder builder() {
 		return new Builder();
 	}
 	//endregion
 
-
+	/**
+	 * @return the project id and namespace, formatted <tt>projectId(namespace)</tt>
+	 */
 	@Override
 	public String toString() {
 		return pluginId + "(" + namespace.toString() + ")";

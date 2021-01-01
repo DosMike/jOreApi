@@ -9,8 +9,8 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.Serializable;
 
 /**
- * Represents the current session token. Should be destroyed with
- * {@link OreApiV2#destroySession()}
+ * Represents the current session token. Should be destroyed with {@link OreApiV2#destroySession()}
+ * once you're done.
  */
 public class OreSession extends Expiring<String> implements Serializable {
 

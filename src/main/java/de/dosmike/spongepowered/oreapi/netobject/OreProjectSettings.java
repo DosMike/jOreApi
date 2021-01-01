@@ -5,6 +5,7 @@ import de.dosmike.spongepowered.oreapi.routes.Projects;
 import de.dosmike.spongepowered.oreapi.utility.FromJson;
 import de.dosmike.spongepowered.oreapi.utility.JsonTags;
 import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,6 +13,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * The project settings contain keywords, license information
+ * whether the main forum post is synced with the home page and
+ * a collection of various links.
+ */
 public class OreProjectSettings implements Serializable {
 
 	/**
@@ -47,34 +53,80 @@ public class OreProjectSettings implements Serializable {
 	}
 
 	//region getters
+
+	/**
+	 * Get up to 5 keywords set for this project, that help in finding the project through search.
+	 *
+	 * @return a copy of the keyword list
+	 */
 	public List<String> getKeywords() {
 		return new ArrayList<>(Arrays.asList(keywords));
 	}
 
+	/**
+	 * @return the homepage url if set
+	 */
+	@Nullable
 	public String getHomepageUrl() {
 		return homepageUrl;
 	}
 
+	/**
+	 * @return the url to the issue tracker, if set
+	 */
+	@Nullable
 	public String getIssuesUrl() {
 		return issuesUrl;
 	}
 
+	/**
+	 * @return the url to the source-code, if set
+	 */
+	@Nullable
 	public String getSourcesUrl() {
 		return sourcesUrl;
 	}
 
+	/**
+	 * @return the url to the support community, if set
+	 */
+	@Nullable
 	public String getSupportUrl() {
 		return supportUrl;
 	}
 
+	/**
+	 * The name is intended to be well known name. Examples are:<ul>
+	 * <li>MIT</li>
+	 * <li>Apache 2.0</li>
+	 * <li>GNU General Public License (GPL)</li>
+	 * <li>GNU Lesser General Public License (LGPL)</li>
+	 * </ul>
+	 * The license url should match your chosen license name and point to your
+	 * instance of the license file, preferably within your sourcecode repository.
+	 * <br>
+	 *
+	 * @return the name of the license applied to this project
+	 */
+	@Nullable
 	public String getLicenseName() {
 		return licenseName;
 	}
 
+	/**
+	 * @return the url to the license text file, if set
+	 */
+	@Nullable
 	public String getLicenseUrl() {
 		return licenseUrl;
 	}
 
+	/**
+	 * Forum sync means that, whenever you change the home page of your project, the initial
+	 * post on the forum discussion thread is updated as well.
+	 *
+	 * @return true if the forum post is set to sync
+	 */
 	public boolean isForumSync() {
 		return forumSync;
 	}

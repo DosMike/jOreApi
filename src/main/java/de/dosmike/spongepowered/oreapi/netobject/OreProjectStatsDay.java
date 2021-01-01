@@ -6,6 +6,9 @@ import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 
 import java.io.Serializable;
 
+/**
+ * Represents the stats for a single recorded day
+ */
 public class OreProjectStatsDay implements Serializable {
 
 	@FromJson("views")

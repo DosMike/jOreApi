@@ -6,6 +6,9 @@ import de.dosmike.spongepowered.oreapi.utility.JsonUtil;
 
 import java.io.Serializable;
 
+/**
+ * Represents the all-time stats for this project.
+ */
 public class OreProjectStatsAll implements Serializable {
 
 	@FromJson("views")
